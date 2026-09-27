@@ -239,7 +239,7 @@ final class StoryLockTests: XCTestCase {
 
     func testCopiedOutcomeChangesMatchTheGame() {
         // What the fix applies for the Geuis case, from flags as they were.
-        let steps = MissionCompletion.parse("b600 !b511")
+        let steps = NCBSetExpression.parse("b600 !b511")
         let current: [Bool] = state(flagsOn: [511, 810]).bits
 
         XCTAssertEqual(MissionCompletion.changes(for: steps, currentBits: current, choices: []), [600: true, 511: false])

@@ -153,6 +153,25 @@ public struct StoryFlagCatalog: Sendable {
             return result
         }
 
+        if isTest {
+            return looseRequirements(in: expression)
+        }
+
+        // Set expressions go through the one shared set-expression parser.
+        return NCBSetExpression.operations(in: expression).compactMap { operation -> (id: Int, effect: StoryFlagEffect)? in
+            switch operation {
+            case .set(let id): return (id, .sets)
+            case .clear(let id): return (id, .clears)
+            case .toggle(let id): return (id, .toggles)
+            case .other: return nil
+            }
+        }
+    }
+
+    // Fallback for a test expression the real parser rejects (e.g. an
+    // unbalanced parenthesis): still report every flag it mentions, reading
+    // a "!" directly before one as "needs off".
+    private static func looseRequirements(in expression: String) -> [(id: Int, effect: StoryFlagEffect)] {
         let characters = Array(expression)
         var result: [(id: Int, effect: StoryFlagEffect)] = []
         var index = 0
@@ -171,19 +190,10 @@ public struct StoryFlagCatalog: Sendable {
             }
 
             let prefix = index > 0 ? characters[index - 1] : " "
-            let effect: StoryFlagEffect
-            if isTest {
-                effect = prefix == "!" ? .requiresClear : .requiresSet
-            } else if prefix == "!" {
-                effect = .clears
-            } else if prefix == "^" {
-                effect = .toggles
-            } else {
-                effect = .sets
-            }
-            result.append((id, effect))
+            result.append((id, prefix == "!" ? .requiresClear : .requiresSet))
             index = end
         }
+
         return result
     }
 
@@ -246,7 +256,7 @@ public struct StoryFlagCatalog: Sendable {
         // correctly parses only `b`/`B` + digits as a bit reference
         // regardless of surrounding R(...)/parens - there's no parsing bug
         // to fix here, only a description-text nuance to add.
-        let randomChoiceIDs: Set<Int> = isTest ? [] : Self.idsInsideRandomChoiceGroups(in: expression)
+        let randomChoiceIDs: Set<Int> = isTest ? [] : NCBSetExpression.flagIDsInsideRandomChoices(in: expression)
 
         for operation in bitOperations(in: expression, isTest: isTest) where (0..<MissionBits.count).contains(operation.id) {
             let qualifiedEvent = randomChoiceIDs.contains(operation.id)
@@ -261,45 +271,6 @@ public struct StoryFlagCatalog: Sendable {
                 event: qualifiedEvent
             ))
         }
-    }
-
-    // Finds every control-bit id referenced inside a set expression's
-    // R(<op1> <op2>) random-choice groups (top-level parens after an 'R'/'r'
-    // - the Bible states these can't be nested, but depth-tracking handles
-    // it harmlessly either way). Only meaningful for set expressions; test
-    // expressions don't support R(...) at all.
-    // Internal (not private) so mission diagnostics can tell a guaranteed
-    // flag change from a random one.
-    static func idsInsideRandomChoiceGroups(in expression: String) -> Set<Int> {
-        var ids: Set<Int> = []
-        let characters = Array(expression)
-        var index = 0
-
-        while index < characters.count {
-            guard characters[index] == "R" || characters[index] == "r",
-                  index + 1 < characters.count, characters[index + 1] == "(" else {
-                index += 1
-                continue
-            }
-
-            let groupStart = index + 2
-            var depth = 1
-            var cursor = groupStart
-            while cursor < characters.count, depth > 0 {
-                if characters[cursor] == "(" { depth += 1 }
-                if characters[cursor] == ")" { depth -= 1 }
-                cursor += 1
-            }
-            let groupEnd = depth == 0 ? cursor - 1 : cursor
-            let group = String(characters[groupStart..<max(groupStart, groupEnd)])
-
-            for operation in bitOperations(in: group, isTest: false) {
-                ids.insert(operation.id)
-            }
-            index = cursor
-        }
-
-        return ids
     }
 
     private static func makeName(for id: Int, references: [StoryFlagReference]) -> String {

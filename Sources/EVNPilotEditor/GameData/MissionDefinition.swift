@@ -412,37 +412,11 @@ public struct MissionDefinition: Identifiable, Equatable, Sendable {
 
     // MARK: - Mission chaining
 
-    // Extracts every "Sxxx" (start mission xxx) token's mission ID from an
-    // NCB set-expression string, in the order they appear. Set expressions
-    // are whitespace-separated tokens, optionally parenthesized (for the
-    // "R(op1 op2)" random-choice form) and/or prefixed with `!` (clear) or
-    // `^` (toggle) - none of which change which numeric ID an `S` operator
-    // targets, so this simply scans for every `S<digits>` substring
-    // (case-insensitive) rather than fully parsing the grammar.
+    // Mission IDs an NCB set expression starts ("Sxxx"), in order. Kept
+    // here because chaining is described from the mission's point of view;
+    // the parsing itself is NCBSetExpression's.
     public static func startedMissionIDs(in expression: String) -> [Int] {
-        guard !expression.isEmpty else { return [] }
-
-        var result: [Int] = []
-        let chars = Array(expression)
-        var index = 0
-
-        while index < chars.count {
-            let c = chars[index]
-            if c == "S" || c == "s" {
-                var digitEnd = index + 1
-                while digitEnd < chars.count, chars[digitEnd].isNumber {
-                    digitEnd += 1
-                }
-                if digitEnd > index + 1, let value = Int(String(chars[(index + 1)..<digitEnd])) {
-                    result.append(value)
-                }
-                index = digitEnd
-            } else {
-                index += 1
-            }
-        }
-
-        return result
+        NCBSetExpression.startedMissionIDs(in: expression)
     }
 
     // MARK: - Layout

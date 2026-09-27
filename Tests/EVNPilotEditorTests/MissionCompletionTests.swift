@@ -26,7 +26,7 @@ final class MissionCompletionTests: XCTestCase {
     }
 
     func testParsesFlagsRandomChoicesAndOtherEffects() {
-        let steps = MissionCompletion.parse("b800 R(b804 b805) S733 !b12 ^b3")
+        let steps = NCBSetExpression.parse("b800 R(b804 b805) S733 !b12 ^b3")
 
         XCTAssertEqual(steps, [
             .single(.set(800)),

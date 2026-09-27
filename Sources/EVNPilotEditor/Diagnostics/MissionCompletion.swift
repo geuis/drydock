@@ -11,34 +11,16 @@ import Foundation
 // effects (starting missions, giving items, moving the player) can't be
 // expressed as flags and are only reported.
 struct MissionCompletion {
-    // One step of an NCB set expression.
-    enum Operation: Equatable {
-        case set(Int)
-        case clear(Int)
-        case toggle(Int)
-        // Anything that isn't a flag change, kept as written ("S733").
-        case other(String)
-
-        var flagID: Int? {
-            switch self {
-            case .set(let id), .clear(let id), .toggle(let id): return id
-            case .other: return nil
-            }
-        }
-    }
-
-    // A top-level step: a plain operation, or an R(...) random choice
-    // between several.
-    enum Step: Equatable {
-        case single(Operation)
-        case randomChoice([Operation])
-    }
+    // The parser lives in NCBSetExpression; these names keep this type's
+    // signatures readable.
+    typealias Operation = NCBSetExpression.Operation
+    typealias Step = NCBSetExpression.Step
 
     let steps: [Step]
 
     init(mission: MissionDefinition) {
         // Accepting comes before succeeding, so success wins any overlap.
-        steps = Self.parse(mission.onAccept) + Self.parse(mission.onSuccess)
+        steps = NCBSetExpression.parse(mission.onAccept) + NCBSetExpression.parse(mission.onSuccess)
     }
 
     // The random choices, in order, for the player to pick from.
@@ -102,12 +84,7 @@ struct MissionCompletion {
 
     // Effects in `steps` that aren't flag changes, as written.
     static func otherEffects(in steps: [Step]) -> [String] {
-        steps.flatMap { step -> [Operation] in
-            switch step {
-            case .single(let operation): return [operation]
-            case .randomChoice(let options): return options
-            }
-        }
+        steps.flatMap(\.operations)
         .compactMap { operation in
             if case .other(let text) = operation { return text }
             return nil
@@ -166,69 +143,13 @@ struct MissionCompletion {
     }
 
     private var turnedOnOperations: [Operation] {
-        steps.flatMap { step -> [Operation] in
-            switch step {
-            case .single(let operation): return [operation]
-            case .randomChoice(let options): return options
-            }
-        }
+        steps.flatMap(\.operations)
         .filter { operation in
             switch operation {
             case .set, .toggle: return true
             case .clear, .other: return false
             }
         }
-    }
-
-    // MARK: - Parsing
-
-    // Splits a set expression into steps: whitespace-separated operations,
-    // with each R(...) group kept together as one random choice.
-    static func parse(_ expression: String) -> [Step] {
-        let characters: [Character] = Array(expression)
-        var steps: [Step] = []
-        var index: Int = 0
-
-        while index < characters.count {
-            if characters[index].isWhitespace {
-                index += 1
-                continue
-            }
-
-            let isRandomGroup: Bool = (characters[index] == "R" || characters[index] == "r")
-                && index + 1 < characters.count
-                && characters[index + 1] == "("
-
-            if isRandomGroup {
-                var cursor: Int = index + 2
-                var depth: Int = 1
-
-                while cursor < characters.count, depth > 0 {
-                    if characters[cursor] == "(" { depth += 1 }
-                    if characters[cursor] == ")" { depth -= 1 }
-                    cursor += 1
-                }
-
-                let contentEnd: Int = depth == 0 ? cursor - 1 : cursor
-                let content: String = String(characters[(index + 2)..<max(index + 2, contentEnd)])
-                let options: [Operation] = content.split(whereSeparator: \.isWhitespace).map { operation(String($0)) }
-
-                steps.append(.randomChoice(options))
-                index = cursor
-                continue
-            }
-
-            var end: Int = index
-
-            while end < characters.count, !characters[end].isWhitespace {
-                end += 1
-            }
-
-            steps.append(.single(operation(String(characters[index..<end]))))
-            index = end
-        }
-
-        return steps
     }
 
     // Plain words for the common non-flag effects (Nova Bible NCB set
@@ -253,26 +174,6 @@ struct MissionCompletion {
         case "T", "t": return "renaming your ship"
         case "X", "x": return "marking system \(number) explored"
         default: return token
-        }
-    }
-
-    private static func operation(_ token: String) -> Operation {
-        var text: Substring = Substring(token)
-        var prefix: Character?
-
-        if let first = text.first, first == "!" || first == "^" {
-            prefix = first
-            text = text.dropFirst()
-        }
-
-        guard let letter = text.first, letter == "b" || letter == "B", let id = Int(text.dropFirst()) else {
-            return .other(token)
-        }
-
-        switch prefix {
-        case "!": return .clear(id)
-        case "^": return .toggle(id)
-        default: return .set(id)
         }
     }
 }

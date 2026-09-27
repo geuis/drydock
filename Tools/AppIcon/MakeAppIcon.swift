@@ -15,8 +15,8 @@ import CoreGraphics
 
 // MARK: - Pixel buffer
 
-// Straight RGBA bytes with the first row at the top, so image coordinates
-// match what you see in the source icon.
+// Premultiplied RGBA bytes (what CoreGraphics expects) with the first row at
+// the top, so image coordinates match what you see in the source icon.
 struct PixelBuffer {
     let width: Int
     let height: Int
@@ -90,7 +90,7 @@ func loadSourceIcon(appPath: String) -> CGImage {
 let shipOutline: [CGPoint] = [
     CGPoint(x: 36, y: 472), CGPoint(x: 38, y: 410), CGPoint(x: 105, y: 295), CGPoint(x: 185, y: 172),
     CGPoint(x: 260, y: 138), CGPoint(x: 330, y: 116), CGPoint(x: 422, y: 128), CGPoint(x: 472, y: 180),
-    CGPoint(x: 472, y: 262), CGPoint(x: 466, y: 325), CGPoint(x: 440, y: 340), CGPoint(x: 360, y: 365),
+    CGPoint(x: 472, y: 262), CGPoint(x: 466, y: 322), CGPoint(x: 440, y: 332), CGPoint(x: 400, y: 338), CGPoint(x: 360, y: 358),
     CGPoint(x: 260, y: 418), CGPoint(x: 150, y: 464), CGPoint(x: 75, y: 488)
 ]
 
@@ -197,8 +197,41 @@ func cutOutShip(_ source: PixelBuffer) -> [Bool] {
     }
 
     // Undo the gap closing so the outline sits back on the real hull edge.
-    let backgroundGrown: [Bool] = grow(background, width: width, height: height, radius: closeRadius)
-    return backgroundGrown.map { !$0 }
+    // One extra pixel trims the dark anti-aliased fringe and snaps thin
+    // background slivers off the hull so the island pass drops them.
+    let backgroundGrown: [Bool] = grow(background, width: width, height: height, radius: closeRadius + 1)
+    return largestIsland(backgroundGrown.map { !$0 }, width: width, height: height)
+}
+
+// Light tile bevels near the hull survive as specks; only the ship itself
+// is one big connected piece.
+func largestIsland(_ mask: [Bool], width: Int, height: Int) -> [Bool] {
+    var label: [Int] = [Int](repeating: -1, count: mask.count)
+    var sizes: [Int] = []
+
+    for start in 0..<mask.count where mask[start] && label[start] < 0 {
+        let id: Int = sizes.count
+        var size: Int = 0
+        var pending: [Int] = [start]
+        label[start] = id
+
+        while let index = pending.popLast() {
+            size += 1
+
+            for neighbor in neighbors(of: index, width: width, height: height) where mask[neighbor] && label[neighbor] < 0 {
+                label[neighbor] = id
+                pending.append(neighbor)
+            }
+        }
+
+        sizes.append(size)
+    }
+
+    guard let largest: Int = sizes.indices.max(by: { sizes[$0] < sizes[$1] }) else {
+        fatalError("No ship found in the source icon")
+    }
+
+    return label.map { $0 == largest }
 }
 
 // The source ship with a soft-edged alpha taken from the mask, drawn at
@@ -215,9 +248,12 @@ func makeShipLayer(source: PixelBuffer, mask: [Bool], size: Int) -> PixelBuffer 
     var result: PixelBuffer = PixelBuffer(width: size, height: size)
 
     for index in 0..<(size * size) {
-        result.bytes[index * 4] = colour.bytes[index * 4]
-        result.bytes[index * 4 + 1] = colour.bytes[index * 4 + 1]
-        result.bytes[index * 4 + 2] = colour.bytes[index * 4 + 2]
+        let coverage: Double = Double(alpha.bytes[index * 4 + 3]) / 255
+
+        for channel in 0..<3 {
+            result.bytes[index * 4 + channel] = UInt8(Double(colour.bytes[index * 4 + channel]) * coverage)
+        }
+
         result.bytes[index * 4 + 3] = alpha.bytes[index * 4 + 3]
     }
 
@@ -261,27 +297,34 @@ func makeBlueprintLayer(ship: PixelBuffer) -> PixelBuffer {
     func shade(_ column: Int, _ row: Int) -> Double {
         let clampedColumn: Int = min(max(column, 0), width - 1)
         let clampedRow: Int = min(max(row, 0), height - 1)
-        return ship.luminance(at: clampedRow * width + clampedColumn) / 255 * alpha(column, row)
+        // Already premultiplied, so the hull edge against nothing counts as an edge too.
+        return ship.luminance(at: clampedRow * width + clampedColumn) / 255
+    }
+
+    func sobel(_ sample: (Int, Int) -> Double, _ column: Int, _ row: Int) -> Double {
+        let horizontal: Double =
+            (sample(column + 1, row - 1) + 2 * sample(column + 1, row) + sample(column + 1, row + 1))
+            - (sample(column - 1, row - 1) + 2 * sample(column - 1, row) + sample(column - 1, row + 1))
+        let vertical: Double =
+            (sample(column - 1, row + 1) + 2 * sample(column, row + 1) + sample(column + 1, row + 1))
+            - (sample(column - 1, row - 1) + 2 * sample(column, row - 1) + sample(column + 1, row - 1))
+        return sqrt(horizontal * horizontal + vertical * vertical)
     }
 
     for row in 0..<height {
         for column in 0..<width {
-            // Sobel edges of the shading pick out panel seams and vents.
-            let horizontal: Double =
-                (shade(column + 1, row - 1) + 2 * shade(column + 1, row) + shade(column + 1, row + 1))
-                - (shade(column - 1, row - 1) + 2 * shade(column - 1, row) + shade(column - 1, row + 1))
-            let vertical: Double =
-                (shade(column - 1, row + 1) + 2 * shade(column, row + 1) + shade(column + 1, row + 1))
-                - (shade(column - 1, row - 1) + 2 * shade(column, row - 1) + shade(column + 1, row - 1))
-            let edge: Double = min(1, max(0, (sqrt(horizontal * horizontal + vertical * vertical) - 0.35) * 1.6))
+            // Edges in the shading pick out panel seams and vents; edges in
+            // the coverage give an unbroken outline even where the hull is dark.
+            let panelLine: Double = min(1, max(0, (sobel(shade, column, row) - 0.35) * 1.6))
+            let outline: Double = min(1, sobel(alpha, column, row) * 0.6)
 
-            let wash: Double = alpha(column, row) * 0.16
-            let ink: Double = max(edge, wash)
+            let wash: Double = alpha(column, row) * 0.24
+            let ink: Double = max(panelLine, outline, wash)
             let index: Int = row * width + column
 
-            result.bytes[index * 4] = UInt8(blueprintInk.red * 255)
-            result.bytes[index * 4 + 1] = UInt8(blueprintInk.green * 255)
-            result.bytes[index * 4 + 2] = UInt8(blueprintInk.blue * 255)
+            result.bytes[index * 4] = UInt8(blueprintInk.red * ink * 255)
+            result.bytes[index * 4 + 1] = UInt8(blueprintInk.green * ink * 255)
+            result.bytes[index * 4 + 2] = UInt8(blueprintInk.blue * ink * 255)
             result.bytes[index * 4 + 3] = UInt8(ink * 255)
         }
     }
@@ -295,7 +338,7 @@ func makeBlueprintLayer(ship: PixelBuffer) -> PixelBuffer {
 // The seam runs across the ship, square to its nose-to-engines line.
 let shipNose: CGPoint = CGPoint(x: 110, y: 910)
 let shipTail: CGPoint = CGPoint(x: 840, y: 300)
-let seamFraction: CGFloat = 0.52
+let seamFraction: CGFloat = 0.56
 
 var seamPoint: CGPoint {
     return CGPoint(
@@ -337,10 +380,11 @@ func makeSplitShip(ship: PixelBuffer, blueprint: PixelBuffer) -> PixelBuffer {
             let glow: Double = exp(-(distance * distance) / (2 * glowWidth * glowWidth)) * shipAlpha
 
             if glow > 0.01 {
+                // Premultiplied "over": the glow's own alpha is `glow`.
                 result.bytes[index * 4] = blend(UInt8(seamGlow.red * 255), result.bytes[index * 4], glow)
                 result.bytes[index * 4 + 1] = blend(UInt8(seamGlow.green * 255), result.bytes[index * 4 + 1], glow)
                 result.bytes[index * 4 + 2] = blend(UInt8(seamGlow.blue * 255), result.bytes[index * 4 + 2], glow)
-                result.bytes[index * 4 + 3] = max(result.bytes[index * 4 + 3], UInt8(glow * 255))
+                result.bytes[index * 4 + 3] = blend(255, result.bytes[index * 4 + 3], glow)
             }
         }
     }
@@ -573,7 +617,7 @@ func renderIcon(shipLayer: CGImage) -> CGImage {
 
     // Nudge the tip from the seam's middle toward the hull's lower edge so
     // it reads as drawing on the ship rather than hiding behind it.
-    let tip: CGPoint = canvasPoint(fromLayer: CGPoint(x: seamPoint.x + 70, y: seamPoint.y + 85))
+    let tip: CGPoint = canvasPoint(fromLayer: CGPoint(x: seamPoint.x + 34, y: seamPoint.y + 42))
     drawPencil(in: context, tip: tip, angle: -.pi / 3.4)
 
     return context.makeImage()!

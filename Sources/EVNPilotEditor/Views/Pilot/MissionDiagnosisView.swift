@@ -274,7 +274,7 @@ struct MissionDiagnosisView: View {
         case .missionOutcome(let missionID, let event):
             guard let source = snapshot.missionResolver.mission(id: missionID) else { return ([:], [], false) }
 
-            let steps: [MissionCompletion.Step] = MissionCompletion.parse(MissionCompletion.expression(for: event, of: source))
+            let steps: [NCBSetExpression.Step] = NCBSetExpression.parse(MissionCompletion.expression(for: event, of: source))
             let hasRandomChoice: Bool = steps.contains { step in
                 if case .randomChoice = step { return true }
                 return false

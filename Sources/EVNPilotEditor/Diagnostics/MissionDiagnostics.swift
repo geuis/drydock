@@ -1667,7 +1667,7 @@ public struct MissionDiagnostics: Sendable {
     // Flags an outcome always turns on: plain sets, not toggles and not
     // one side of an R(...) random choice.
     static func flagsAlwaysTurnedOn(by setExpression: String) -> [Int] {
-        let randomIDs: Set<Int> = StoryFlagCatalog.idsInsideRandomChoiceGroups(in: setExpression)
+        let randomIDs: Set<Int> = NCBSetExpression.flagIDsInsideRandomChoices(in: setExpression)
 
         return StoryFlagCatalog.bitOperations(in: setExpression, isTest: false)
             .filter { $0.effect == .sets && !randomIDs.contains($0.id) }
