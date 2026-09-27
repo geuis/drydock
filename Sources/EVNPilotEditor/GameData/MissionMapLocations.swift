@@ -63,19 +63,16 @@ public enum MissionMapLocations {
     // Systems a stellar-style location code (AvailStel, TravelStel,
     // ReturnStel) can land in. Empty when it could be anywhere.
     static func stellarCodeSystems(_ code: Int16, galaxy: GalaxyMap) -> [Int] {
-        let value: Int = Int(code)
+        switch MissionLocationCode(code) {
+        case .stellar(let stellarID):
+            return galaxy.systemID(containingStellar: stellarID).map { [$0] } ?? []
 
-        switch value {
-        case 128...2175:
-            return galaxy.systemID(containingStellar: value).map { [$0] } ?? []
+        case .adjacentToSystem(let systemID):
+            return galaxy.neighborIDs(of: systemID)
 
-        case 5000...7047:
-            return galaxy.neighborIDs(of: value - 5000 + 128)
-
-        case 9999...10255:
-            // 9999 is (-1 + 10000): independent worlds.
-            let governmentIndex: Int = value - 10000
-            return governmentIndex < 0 ? [] : galaxy.systemIDs(ownedBy: governmentIndex + 128)
+        case .government(let governmentID):
+            // Independent worlds aren't marked on the map.
+            return governmentID.map { galaxy.systemIDs(ownedBy: $0) } ?? []
 
         default:
             return []

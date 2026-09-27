@@ -627,37 +627,35 @@ private struct RequirementNodeView: View {
 // Bible's documented value ranges and the loaded names.
 enum MissionPlaces {
     static func offeredAt(_ availStel: Int16, names: ResourceNameIndex) -> String {
-        let value: Int = Int(availStel)
-
-        switch value {
-        case -1:
+        switch MissionLocationCode(availStel) {
+        case .anyInhabited:
             return "Any inhabited planet or station"
 
-        case 128...2175:
-            return names.name(type: ResourceNameIndex.stellars, id: value).map { GameName($0).title } ?? "Planet or station \(value)"
+        case .stellar(let stellarID):
+            return names.name(type: ResourceNameIndex.stellars, id: stellarID).map { GameName($0).title } ?? "Planet or station \(stellarID)"
 
-        case 5000...7047:
-            return "A planet in a system next to \(systemName(value - 5000 + 128, names: names))"
+        case .adjacentToSystem(let systemID):
+            return "A planet in a system next to \(systemName(systemID, names: names))"
 
-        case 9999...10255:
-            return "Any planet of \(governmentName(value - 10000, names: names))"
+        case .government(let governmentID):
+            return "Any planet of \(governmentName(governmentID, names: names))"
 
-        case 15000...15255:
-            return "Any planet of an ally of \(governmentName(value - 15000, names: names))"
+        case .allyOf(let governmentID):
+            return "Any planet of an ally of \(governmentName(governmentID, names: names))"
 
-        case 20000...20255:
-            return "Any planet not belonging to \(governmentName(value - 20000, names: names))"
+        case .notGovernment(let governmentID):
+            return "Any planet not belonging to \(governmentName(governmentID, names: names))"
 
-        case 25000...25255:
-            return "Any planet of an enemy of \(governmentName(value - 25000, names: names))"
+        case .enemyOf(let governmentID):
+            return "Any planet of an enemy of \(governmentName(governmentID, names: names))"
 
-        case 30000...30255:
-            return "Any planet of \(governmentName(value - 30000, names: names)) or its class"
+        case .governmentOrClass(let governmentID):
+            return "Any planet of \(governmentName(governmentID, names: names)) or its class"
 
-        case 31000...31255:
-            return "Any planet not of \(governmentName(value - 31000, names: names)) or its class"
+        case .neitherGovernmentNorClass(let governmentID):
+            return "Any planet not of \(governmentName(governmentID, names: names)) or its class"
 
-        default:
+        case .unrecognized(let value):
             return "Location code \(value)"
         }
     }
@@ -675,11 +673,10 @@ enum MissionPlaces {
         }
     }
 
-    // Government codes store (government ID - 128); -1 means independent.
-    private static func governmentName(_ index: Int, names: ResourceNameIndex) -> String {
-        guard index >= 0 else { return "independents" }
+    // nil is independent worlds (see MissionLocationCode).
+    private static func governmentName(_ governmentID: Int?, names: ResourceNameIndex) -> String {
+        guard let governmentID else { return "independents" }
 
-        let governmentID: Int = index + 128
         return names.name(type: ResourceNameIndex.governments, id: governmentID).map { GameName($0).title } ?? "government \(governmentID)"
     }
 

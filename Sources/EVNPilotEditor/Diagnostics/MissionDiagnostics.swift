@@ -1438,36 +1438,35 @@ public struct MissionDiagnostics: Sendable {
 
     // MARK: - Location text
 
-    // Uses the same "government-relative bucket" encoding documented for
-    // AvailStel/ShipSyst in MissionDefinition.swift. The exact numeric
-    // offset used to recover a govt "class" number below mirrors
-    // OutfitDefinition.requireGovtDescription's established convention in
-    // this codebase (bucket start = a govt-class-zero point, so subtracting
-    // it yields a small class index) rather than claiming a fully-verified
-    // formula - see that function for the precedent.
+    // Name-free wording of the location code; MissionLocationCode does the
+    // decoding so this can't drift from the details view or the map.
     public static func locationDescription(availStel: Int16) -> String {
-        switch availStel {
-        case -1:
+        switch MissionLocationCode(availStel) {
+        case .anyInhabited:
             return "any inhabited stellar"
-        case 128...2175:
-            return "stellar \(availStel)"
-        case 5000...7047:
-            return "a stellar in a system adjacent to system \(availStel - 5000)"
-        case 9999...10255:
-            return "a stellar belonging to government \(availStel - 9999)"
-        case 15000...15255:
-            return "a stellar belonging to an ally of government \(availStel - 15000)"
-        case 20000...20255:
-            return "a stellar belonging to anyone but government \(availStel - 20000)"
-        case 25000...25255:
-            return "a stellar belonging to an enemy of government \(availStel - 25000)"
-        case 30000...30255:
-            return "a stellar belonging to government \(availStel - 30000) or one of its classmates"
-        case 31000...31255:
-            return "a stellar belonging to neither government \(availStel - 31000) nor any of its classmates"
-        default:
-            return "an unrecognized location code (\(availStel))"
+        case .stellar(let stellarID):
+            return "stellar \(stellarID)"
+        case .adjacentToSystem(let systemID):
+            return "a stellar in a system adjacent to system \(systemID)"
+        case .government(let governmentID):
+            return "a stellar belonging to \(governmentText(governmentID))"
+        case .allyOf(let governmentID):
+            return "a stellar belonging to an ally of \(governmentText(governmentID))"
+        case .notGovernment(let governmentID):
+            return "a stellar belonging to anyone but \(governmentText(governmentID))"
+        case .enemyOf(let governmentID):
+            return "a stellar belonging to an enemy of \(governmentText(governmentID))"
+        case .governmentOrClass(let governmentID):
+            return "a stellar belonging to \(governmentText(governmentID)) or one of its classmates"
+        case .neitherGovernmentNorClass(let governmentID):
+            return "a stellar belonging to neither \(governmentText(governmentID)) nor any of its classmates"
+        case .unrecognized(let value):
+            return "an unrecognized location code (\(value))"
         }
+    }
+
+    private static func governmentText(_ governmentID: Int?) -> String {
+        governmentID.map { "government \($0)" } ?? "independents"
     }
 
     public static func offerPlaceDescription(availLoc: Int16) -> String {
