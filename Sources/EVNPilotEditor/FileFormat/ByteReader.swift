@@ -56,7 +56,8 @@ public struct ByteReader {
 
     // Reads a 1-byte length prefix at `offset`, then up to `maxLength` bytes
     // starting at `offset + 1`, decoding min(lengthByte, maxLength) bytes as
-    // UTF8 and trimming any trailing embedded nulls.
+    // Mac OS Roman and trimming any trailing embedded nulls. Pilot files come
+    // from the classic Mac code base, so accented names use that encoding.
     public func pascalString(at offset: Int, maxLength: Int) throws -> String {
         guard offset >= 0, maxLength >= 0 else {
             throw ByteReaderError.outOfBounds
@@ -69,35 +70,7 @@ public struct ByteReader {
         let stringBytes = try bytes(at: offset + 1, length: effectiveLength)
         let trimmed = stringBytes.prefix { $0 != 0x00 }
 
-        guard let decoded = String(data: trimmed, encoding: .utf8) else {
-            throw ByteReaderError.invalidEncoding
-        }
-
-        return decoded
-    }
-
-    // Reads bytes from `offset` up to the first 0x00 byte, `maxLength` bytes,
-    // or end of data, whichever comes first, and decodes as UTF8.
-    public func cString(at offset: Int, maxLength: Int) throws -> String {
-        guard offset >= 0, offset <= data.count, maxLength >= 0 else {
-            throw ByteReaderError.outOfBounds
-        }
-
-        let absoluteStart = data.startIndex + offset
-        let maxEnd = min(absoluteStart + maxLength, data.endIndex)
-
-        var end = absoluteStart
-        while end < maxEnd, data[end] != 0x00 {
-            end += 1
-        }
-
-        guard absoluteStart <= end else {
-            throw ByteReaderError.outOfBounds
-        }
-
-        let slice = data[absoluteStart..<end]
-
-        guard let decoded = String(data: slice, encoding: .utf8) else {
+        guard let decoded = String(data: trimmed, encoding: .macOSRoman) else {
             throw ByteReaderError.invalidEncoding
         }
 
@@ -108,9 +81,8 @@ public struct ByteReader {
     // or end of data, whichever comes first, and decodes using Mac OS Roman
     // encoding. Classic Mac / BurgerLib resource formats (e.g. .rez archives)
     // use this encoding for resource names, which may contain accented
-    // characters outside plain ASCII/UTF8 - mirrors cString(at:maxLength:)
-    // but with the encoding that format actually requires.
-    public func macRomanCString(at offset: Int, maxLength: Int) throws -> String {
+    // characters outside plain ASCII/UTF8. Pilot strings share the encoding.
+    public func cString(at offset: Int, maxLength: Int) throws -> String {
         guard offset >= 0, offset <= data.count, maxLength >= 0 else {
             throw ByteReaderError.outOfBounds
         }
@@ -134,6 +106,12 @@ public struct ByteReader {
         }
 
         return decoded
+    }
+
+    // Same as cString(at:maxLength:), named for the resource decoders that
+    // call out the encoding explicitly.
+    public func macRomanCString(at offset: Int, maxLength: Int) throws -> String {
+        try cString(at: offset, maxLength: maxLength)
     }
 
     public func bytes(at offset: Int, length: Int) throws -> Data {

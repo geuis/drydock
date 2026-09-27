@@ -572,7 +572,8 @@ public enum PilotUniverseState {
             throw PilotUniverseStateError.dataOutOfBounds
         }
 
-        guard let fullBytes = value.data(using: .ascii) ?? value.data(using: .utf8) else {
+        // Mac OS Roman, like every other string the game stores.
+        guard let fullBytes = value.data(using: .macOSRoman) else {
             throw PilotUniverseStateError.unencodableString
         }
 

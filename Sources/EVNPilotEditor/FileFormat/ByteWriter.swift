@@ -4,6 +4,7 @@ public enum ByteWriterError: Error {
     case outOfBounds
     case valueTooLarge
     case unsupportedFieldType
+    case unencodableCharacters
 }
 
 // Bounds-checked writer that only ever overwrites the exact byte range it is
@@ -18,9 +19,10 @@ public enum ByteWriter {
         try write(bytes: bytes(from: value, byteOrder: byteOrder), at: offset, into: &data)
     }
 
-    // Writes a 1-byte length prefix then the ASCII bytes (truncated to
-    // maxLength if needed), zero-filling the remainder of the maxLength-sized
-    // buffer. Never writes past offset + 1 + maxLength.
+    // Writes a 1-byte length prefix then the Mac OS Roman bytes (truncated
+    // to maxLength if needed), zero-filling the remainder of the
+    // maxLength-sized buffer. Never writes past offset + 1 + maxLength.
+    // Mac Roman is one byte per character, so truncating never splits one.
     public static func writePascalString(_ value: String, at offset: Int, maxLength: Int, into data: inout Data) throws {
         guard offset >= 0, maxLength >= 0 else {
             throw ByteWriterError.outOfBounds
@@ -34,11 +36,11 @@ public enum ByteWriter {
             throw ByteWriterError.outOfBounds
         }
 
-        guard let fullAsciiBytes = value.data(using: .ascii) ?? value.data(using: .utf8) else {
-            throw ByteWriterError.valueTooLarge
+        guard let encodedBytes = value.data(using: .macOSRoman) else {
+            throw ByteWriterError.unencodableCharacters
         }
 
-        let truncatedBytes = fullAsciiBytes.prefix(maxLength)
+        let truncatedBytes = encodedBytes.prefix(maxLength)
         let lengthByte = UInt8(truncatedBytes.count)
 
         var buffer = [UInt8]()
