@@ -214,6 +214,17 @@ struct TextCommitField: View {
     }
 }
 
+// Marks fields whose place in the pilot file is inferred from the format
+// notes and sample pilots but hasn't been confirmed by changing it and
+// checking the result in the game (the "probable" fields in project.md).
+struct UnconfirmedFieldNote: View {
+    let fields: String
+
+    var body: some View {
+        Label("\(fields): where this is stored in the pilot file is inferred, not yet confirmed in the game. Keep the backup until you've checked the result.", systemImage: "questionmark.circle")
+    }
+}
+
 // Searchable chooser used for ships, outfits, weapons, and places.
 struct PickerItem: Identifiable, Hashable {
     let id: Int

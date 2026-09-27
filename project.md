@@ -114,6 +114,9 @@ probable rather than in-game verified, the price-swing arrays are
 undocumented, "completed" mission status is inferred from story flags, and
 mission 428 in the stock data is malformed.
 
-The format is only considered editable where offsets have been validated.
-Unsupported or still-unidentified pilot fields should be documented and tested
-before they are exposed for writes.
+Verified fields are edited freely. Probable fields (offsets inferred from the
+format notes and sample pilots but not yet confirmed by an in-game change) are
+editable too, but every section that edits one carries an "inferred, not yet
+confirmed" note (`UnconfirmedFieldNote`) so the backup is kept until the result
+is checked. Unsupported or still-unidentified pilot fields should be
+documented and tested before they are exposed for writes.

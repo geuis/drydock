@@ -47,7 +47,7 @@
       "length": 2,
       "type": { "kind": "int16", "byteOrder": "little" },
       "group": "Location & Date",
-      "confidence": "verified",
+      "confidence": "probable",
       "editable": true
     },
     {

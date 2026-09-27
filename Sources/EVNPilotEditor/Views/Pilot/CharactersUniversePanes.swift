@@ -61,7 +61,11 @@ struct CharactersPane: View {
                 } header: {
                     Text("\(slots.count) characters")
                 } footer: {
-                    Text("Active: the character can still appear. Grudge: they're hostile to you. A character killed in the story shows as inactive.")
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Active: the character can still appear. Grudge: they're hostile to you. A character killed in the story shows as inactive.")
+
+                        UnconfirmedFieldNote(fields: "Grudge")
+                    }
                 }
             }
         }
@@ -207,7 +211,11 @@ struct UniversePane: View {
         } header: {
             Text("Timed Events")
         } footer: {
-            Text("Timed events run things like news, wars, and story beats on a schedule. \"Wait\" is the pause before the event can run again.")
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Timed events run things like news, wars, and story beats on a schedule. \"Wait\" is the pause before the event can run again.")
+
+                UnconfirmedFieldNote(fields: "Timed event days and wait")
+            }
         }
     }
 
@@ -235,7 +243,11 @@ struct UniversePane: View {
         } header: {
             Text("Disasters (days remaining)")
         } footer: {
-            Text("Disasters are plagues, strikes, and similar events that change prices on a planet. Set to 0 to end one.")
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Disasters are plagues, strikes, and similar events that change prices on a planet. Set to 0 to end one.")
+
+                UnconfirmedFieldNote(fields: "Disaster days")
+            }
         }
     }
 
@@ -263,7 +275,11 @@ struct UniversePane: View {
         } header: {
             Text("Special Cargo (tons aboard)")
         } footer: {
-            Text("Cargo you pick up from asteroids and wrecks, separate from ordinary trade goods.")
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Cargo you pick up from asteroids and wrecks, separate from ordinary trade goods.")
+
+                UnconfirmedFieldNote(fields: "Special cargo")
+            }
         }
     }
 

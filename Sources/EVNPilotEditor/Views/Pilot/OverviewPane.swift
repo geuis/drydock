@@ -108,7 +108,7 @@ struct OverviewPane: View {
     }
 
     private var shipSection: some View {
-        Section("Ship") {
+        Section {
             LabeledContent("Ship Type") {
                 HStack {
                     Text(currentShipTitle)
@@ -153,6 +153,10 @@ struct OverviewPane: View {
             }
 
             paintRow
+        } header: {
+            Text("Ship")
+        } footer: {
+            UnconfirmedFieldNote(fields: "Paint color")
         }
     }
 
@@ -235,7 +239,7 @@ struct OverviewPane: View {
     }
 
     private var locationSection: some View {
-        Section("Location & Date") {
+        Section {
             LabeledContent("Last Planet or Station") {
                 HStack {
                     Text(currentStellarTitle)
@@ -274,6 +278,10 @@ struct OverviewPane: View {
                     try pilotFile.setDateSuffix(newValue)
                 }, onError: report)
             }
+        } header: {
+            Text("Location & Date")
+        } footer: {
+            UnconfirmedFieldNote(fields: "Last planet and date prefix/suffix")
         }
     }
 

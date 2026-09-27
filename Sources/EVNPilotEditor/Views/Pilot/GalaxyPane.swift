@@ -179,7 +179,11 @@ struct GalaxyPane: View {
             } header: {
                 Text("\(slots.count) systems")
             } footer: {
-                Text("Legal record: positive is good standing, negative means you're wanted. \"Reinforce in\" is the number of days until the system's defenders come back.")
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Legal record: positive is good standing, negative means you're wanted. \"Reinforce in\" is the number of days until the system's defenders come back.")
+
+                    UnconfirmedFieldNote(fields: "Reinforce in")
+                }
             }
         }
     }
@@ -249,7 +253,11 @@ struct GalaxyPane: View {
             } header: {
                 Text("\(slots.count) planets and stations")
             } footer: {
-                Text("Defenders: defense ships remaining. Annoyance: how close a dominated world is to rebelling. Destroyed: days until it's rebuilt, or -1 if it's intact.")
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Defenders: defense ships remaining. Annoyance: how close a dominated world is to rebelling. Destroyed: days until it's rebuilt, or -1 if it's intact.")
+
+                    UnconfirmedFieldNote(fields: "Annoyance")
+                }
             }
         }
     }
