@@ -33,23 +33,14 @@ public final class GameDataLibrary {
 
         var mergedResources: [GameResource] = []
         var failures: [(url: URL, error: Error)] = []
-        var seenKeys = Set<String>()
 
         for fileURL in rezFileURLs {
             do {
                 let archive = try RezArchive(contentsOf: fileURL)
 
-                for resource in archive.resources {
-                    let key = "\(resource.type)#\(resource.id)"
-
-                    // Duplicates across archives are expected and kept (see
-                    // class doc above) - this is just a debugging note.
-                    if !seenKeys.insert(key).inserted {
-                        print("GameDataLibrary: duplicate resource \(key) also found in \(fileURL.lastPathComponent)")
-                    }
-
-                    mergedResources.append(resource)
-                }
+                // Duplicates across archives are expected and kept (see
+                // class doc above).
+                mergedResources.append(contentsOf: archive.resources)
             } catch {
                 failures.append((url: fileURL, error: error))
             }
