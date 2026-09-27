@@ -15,7 +15,7 @@ public enum PilotShipIdentityError: Error {
 // prefixing each with their size as a long and appending the ship name at
 // the end", and separately states resource129's own resource name "is the
 // name of the player's ship". Decoded, it reads "Pirate Carrier 476" for the
-// Shane fixture (whose ship class decodes to ship ID 147, "Pirate Carrier")
+// Chuck Yeager fixture (whose ship class decodes to ship ID 147, "Pirate Carrier")
 // and "Realis 2" for the Geuis fixture - both plausible player-chosen ship
 // names, not class names. The bundled schema's "shipClassName" field
 // (offset 86104, non-editable) reads these exact same bytes under a
@@ -35,7 +35,7 @@ public enum PilotShipIdentity {
     // documented fixed struct size (26366 bytes) lands on 86104 in both real
     // files, which is byte-for-byte where the trailing string's readable
     // content actually begins (cross-checked against the file's total
-    // length in both fixtures: Shane's file is exactly 86104 + 19 bytes
+    // length in both fixtures: Chuck Yeager's file is exactly 86104 + 19 bytes
     // ("Pirate Carrier 476" + NUL), Geuis's is exactly 86104 + 9 bytes
     // ("Realis 2" + NUL)). Verified.
     public static func tailStart(in data: Data) -> Int {

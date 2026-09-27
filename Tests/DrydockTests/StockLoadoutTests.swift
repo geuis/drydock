@@ -26,7 +26,7 @@ final class StockLoadoutTests: XCTestCase {
     }
 
     private func fixtureBytes() throws -> Data {
-        guard let url = Bundle.module.url(forResource: "Shane Merrol", withExtension: "plt", subdirectory: "Fixtures") else {
+        guard let url = Bundle.module.url(forResource: "Chuck Yeager", withExtension: "plt", subdirectory: "Fixtures") else {
             throw XCTSkip("Fixture not found")
         }
 

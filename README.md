@@ -76,7 +76,7 @@ Pilot files are real save games, so Drydock is careful with them:
 - Edits happen on an in-memory copy. Nothing is written until you press
   **Save Pilot Changes**.
 - The first save in each session makes a timestamped backup next to the
-  pilot file (for example `Shane Merrol.plt.bak-20260927-164100`).
+  pilot file (for example `Chuck Yeager.plt.bak-20260927-164100`).
 - If EV Nova saved the pilot while you were editing, Drydock warns you
   instead of silently overwriting the newer progress.
 - Any part of the file Drydock doesn't understand is kept byte for byte.
@@ -138,6 +138,23 @@ pilot file in `Tests/DrydockTests/Fixtures`.
 - "Completed" mission status is inferred from story flags, since the pilot
   file doesn't record it directly.
 - Mission 428 in the stock game data is malformed.
+
+## License
+
+Drydock's source code is released under the [MIT License](LICENSE). You are
+free to use, change, and share it as long as the copyright notice is kept.
+
+The MIT License covers only the code and material written for this project.
+It does not cover EV Nova's own artwork or game data (see Credits below).
+
+## Credits
+
+The ship in the app icon is artwork from EV Nova, developed by ATMOS and
+published by Ambrosia Software. It remains the property of its owners, is used
+here only as a fan tribute, and is not covered by this project's license.
+
+Drydock does not include any EV Nova game data. It reads the files from your
+own copy of the game.
 
 ## Disclaimer
 

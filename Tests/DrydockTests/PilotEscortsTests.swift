@@ -3,8 +3,8 @@ import XCTest
 
 final class PilotEscortsTests: XCTestCase {
     private func fixtureURL() throws -> URL {
-        guard let url = Bundle.module.url(forResource: "Shane Merrol", withExtension: "plt", subdirectory: "Fixtures") else {
-            XCTFail("Could not locate bundled fixture Shane Merrol.plt")
+        guard let url = Bundle.module.url(forResource: "Chuck Yeager", withExtension: "plt", subdirectory: "Fixtures") else {
+            XCTFail("Could not locate bundled fixture Chuck Yeager.plt")
             throw XCTSkip("Fixture not found")
         }
         return url
@@ -16,7 +16,7 @@ final class PilotEscortsTests: XCTestCase {
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
 
-        let destinationURL = tempDirectory.appendingPathComponent("Shane Merrol.plt")
+        let destinationURL = tempDirectory.appendingPathComponent("Chuck Yeager.plt")
         try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
 
         return destinationURL
@@ -50,7 +50,7 @@ final class PilotEscortsTests: XCTestCase {
     }
 
     // Expected values computed directly from the fixture's raw bytes at
-    // absolute offset 59090 (escortClass). Shane Merrol actually has hired
+    // absolute offset 59090 (escortClass). Chuck Yeager actually has hired
     // escorts, so this fixture exercises the non-trivial (non-all -1) case -
     // see PilotEscorts.swift for how this confirms the -96 adjustment.
     func testDecodeEscortClassMatchesFixture() throws {

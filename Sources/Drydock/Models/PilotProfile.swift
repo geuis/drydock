@@ -11,7 +11,7 @@ import Foundation
 // directly. Both paths read/write the identical bytes.
 public enum PilotProfile {
     // Absolute offset 6 = resource128Start (4) + doc offset 0x0002
-    // (`short shipClass`). Verified against both real fixtures: Shane
+    // (`short shipClass`). Verified against both real fixtures: Chuck Yeager
     // decodes to 19 (-> ship ID 19 + 128 = 147, "Pirate Carrier" - matches
     // his known ship name "Pirate Carrier 476"), Geuis decodes to 37
     // (-> ship ID 165, "Mod Starbridge").
@@ -21,7 +21,7 @@ public enum PilotProfile {
     // 0xe9ae `long rating`). Matches the already-verified "rating"
     // FieldDefinition and the anchor used throughout PilotEscorts.swift's
     // offset derivation. Decodes to plausible combat-rating point totals in
-    // both real fixtures (Shane 6369, Geuis 1983). Verified.
+    // both real fixtures (Chuck Yeager 6369, Geuis 1983). Verified.
     public static let combatRatingOffset = 59730
 
     // Absolute offset 10270 = resource128Start (4) + doc offset 0x281a

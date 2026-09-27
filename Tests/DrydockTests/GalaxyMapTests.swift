@@ -153,7 +153,7 @@ final class GalaxyMapTests: XCTestCase {
         let library = try loadLibrary()
         let galaxy = GalaxyMap(library: library)
 
-        guard let url = Bundle.module.url(forResource: "Shane Merrol", withExtension: "plt", subdirectory: "Fixtures") else {
+        guard let url = Bundle.module.url(forResource: "Chuck Yeager", withExtension: "plt", subdirectory: "Fixtures") else {
             throw XCTSkip("Fixture not found")
         }
 
@@ -170,7 +170,7 @@ final class GalaxyMapTests: XCTestCase {
     func testFixturePilotLastPlanetIsInASystem() throws {
         let galaxy = GalaxyMap(library: try loadLibrary())
 
-        guard let url = Bundle.module.url(forResource: "Shane Merrol", withExtension: "plt", subdirectory: "Fixtures") else {
+        guard let url = Bundle.module.url(forResource: "Chuck Yeager", withExtension: "plt", subdirectory: "Fixtures") else {
             throw XCTSkip("Fixture not found")
         }
 

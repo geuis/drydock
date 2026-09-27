@@ -3,7 +3,7 @@ import XCTest
 
 // Synthetic-data tests for MissionDiagnostics (one scenario per status/issue
 // type the task asked for), plus a real-data smoke test against the
-// installed EV Nova game files and the bundled "Shane Merrol.plt" fixture.
+// installed EV Nova game files and the bundled "Chuck Yeager.plt" fixture.
 final class MissionDiagnosticsTests: XCTestCase {
     // MARK: - Synthetic mission builder
 
@@ -374,8 +374,8 @@ final class MissionDiagnosticsTests: XCTestCase {
     }
 
     private func fixtureURL() throws -> URL {
-        guard let url = Bundle.module.url(forResource: "Shane Merrol", withExtension: "plt", subdirectory: "Fixtures") else {
-            XCTFail("Could not locate bundled fixture Shane Merrol.plt")
+        guard let url = Bundle.module.url(forResource: "Chuck Yeager", withExtension: "plt", subdirectory: "Fixtures") else {
+            XCTFail("Could not locate bundled fixture Chuck Yeager.plt")
             throw XCTSkip("Fixture not found")
         }
         return url
@@ -387,7 +387,7 @@ final class MissionDiagnosticsTests: XCTestCase {
     // (the fixture's known-active mission, see MissionSlotTests) must come
     // back .active, and the overall status spread should look plausible
     // (not every mission collapsing into a single bucket).
-    func testRealMissionDataProducesPlausibleDiagnosesForShaneMerrol() throws {
+    func testRealMissionDataProducesPlausibleDiagnosesForChuckYeager() throws {
         let directory = try novaFilesDirectory()
         let library = try GameDataLibrary(contentsOfDirectory: directory)
         let missions = MissionDefinition.decodeAll(from: library)
@@ -462,6 +462,6 @@ final class MissionDiagnosticsTests: XCTestCase {
         let statusesUsed = statusCounts.filter { $0.value > 0 }.count
         XCTAssertGreaterThan(statusesUsed, 1, "Expected more than one distinct mission status across the real data, got: \(statusCounts)")
 
-        print("Shane Merrol real-data mission status counts: \(statusCounts.map { "\($0.key.rawValue)=\($0.value)" }.sorted().joined(separator: ", "))")
+        print("Chuck Yeager real-data mission status counts: \(statusCounts.map { "\($0.key.rawValue)=\($0.value)" }.sorted().joined(separator: ", "))")
     }
 }

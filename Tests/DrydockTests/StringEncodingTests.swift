@@ -37,7 +37,7 @@ final class StringEncodingTests: XCTestCase {
     }
 
     func testDateSuffixWritesMacRoman() throws {
-        guard let url = Bundle.module.url(forResource: "Shane Merrol", withExtension: "plt", subdirectory: "Fixtures") else {
+        guard let url = Bundle.module.url(forResource: "Chuck Yeager", withExtension: "plt", subdirectory: "Fixtures") else {
             throw XCTSkip("Fixture not found")
         }
 

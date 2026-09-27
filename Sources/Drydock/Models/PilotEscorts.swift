@@ -16,7 +16,7 @@ import Foundation
 // 128-byte span lands EXACTLY on rating's known-good absolute offset
 // (59730) - the same anchor that confirmed stelDominated's offset. This is
 // the strongest empirical confirmation available short of a live game
-// session: decoded against the "Shane Merrol" bundled fixture (a pilot who
+// session: decoded against the "Chuck Yeager" bundled fixture (a pilot who
 // has actually hired escorts/fighters), escortClass shows -1 (no escort in
 // that slot) mixed with values in the documented 0-767 (captured) and
 // 1000-1767 (hired) ranges, fighterClass shows -1 mixed with small values

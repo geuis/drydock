@@ -3,8 +3,8 @@ import XCTest
 
 final class PilotProfileTests: XCTestCase {
     private func fixtureURL() throws -> URL {
-        guard let url = Bundle.module.url(forResource: "Shane Merrol", withExtension: "plt", subdirectory: "Fixtures") else {
-            XCTFail("Could not locate bundled fixture Shane Merrol.plt")
+        guard let url = Bundle.module.url(forResource: "Chuck Yeager", withExtension: "plt", subdirectory: "Fixtures") else {
+            XCTFail("Could not locate bundled fixture Chuck Yeager.plt")
             throw XCTSkip("Fixture not found")
         }
         return url
@@ -16,7 +16,7 @@ final class PilotProfileTests: XCTestCase {
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
 
-        let destinationURL = tempDirectory.appendingPathComponent("Shane Merrol.plt")
+        let destinationURL = tempDirectory.appendingPathComponent("Chuck Yeager.plt")
         try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
 
         return destinationURL
@@ -38,7 +38,7 @@ final class PilotProfileTests: XCTestCase {
         }
     }
 
-    // shipClassIndex decodes to 19 for the Shane fixture -> ship ID 147
+    // shipClassIndex decodes to 19 for the Chuck Yeager fixture -> ship ID 147
     // ("Pirate Carrier"), matching his known ship name "Pirate Carrier 476".
     func testDecodeShipClassIndexMatchesFixture() throws {
         let tempURL = try makeTempCopyOfFixture()

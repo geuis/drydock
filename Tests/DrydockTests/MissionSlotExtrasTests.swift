@@ -5,8 +5,8 @@ import XCTest
 // travelStel/returnStel decode, setTimeLeft, and PilotFile.clearMissionSlot.
 final class MissionSlotExtrasTests: XCTestCase {
     private func fixtureURL() throws -> URL {
-        guard let url = Bundle.module.url(forResource: "Shane Merrol", withExtension: "plt", subdirectory: "Fixtures") else {
-            XCTFail("Could not locate bundled fixture Shane Merrol.plt")
+        guard let url = Bundle.module.url(forResource: "Chuck Yeager", withExtension: "plt", subdirectory: "Fixtures") else {
+            XCTFail("Could not locate bundled fixture Chuck Yeager.plt")
             throw XCTSkip("Fixture not found")
         }
         return url
@@ -18,7 +18,7 @@ final class MissionSlotExtrasTests: XCTestCase {
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
 
-        let destinationURL = tempDirectory.appendingPathComponent("Shane Merrol.plt")
+        let destinationURL = tempDirectory.appendingPathComponent("Chuck Yeager.plt")
         try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
 
         return destinationURL

@@ -338,7 +338,7 @@ public enum PilotUniverseState {
 
     // Decodes to "Hawkeye" / "geuis" in the two real files - both are the
     // pilot's actual known nickname (matching the already-verified
-    // "shipName" FieldDefinition's decoded value for the Shane fixture,
+    // "shipName" FieldDefinition's decoded value for the Chuck Yeager fixture,
     // "Hawkeye"). Verified.
     public static func decodePlayerNickname(from data: Data) -> String {
         let reader = ByteReader(data)
