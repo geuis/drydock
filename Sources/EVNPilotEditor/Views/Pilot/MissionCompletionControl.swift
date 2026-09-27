@@ -7,6 +7,9 @@ import SwiftUI
 struct MissionCompletionControl: View {
     let mission: MissionDefinition
     let status: MissionStatus?
+    // Changes each time the story chains are re-evaluated; `status` is up
+    // to date for the latest edit once it does.
+    let evaluationCount: Int
     @ObservedObject var pilotFile: PilotFile
     let storyFlags: [Int: StoryFlagMetadata]
 
@@ -64,16 +67,15 @@ struct MissionCompletionControl: View {
             Text("Finishing this mission in the game picks one of these at random.")
         }
         .editErrorAlert($errorMessage)
-        // The new status arrives after the flags change. If it isn't "done",
-        // say why rather than leaving the switch to flip back silently.
-        .onChange(of: status) { _, newStatus in
+        // The new status arrives after the flags change, and may be the same
+        // as before (a blocked mission can stay blocked), so wait for the
+        // re-evaluation rather than a status change. If it isn't "done", say
+        // why rather than leaving the switch to flip back silently.
+        .onChange(of: evaluationCount) { _, _ in
             guard awaitingDoneCheck else { return }
 
             awaitingDoneCheck = false
-
-            if newStatus != .completed, let resultMessage {
-                self.resultMessage = resultMessage + " It still doesn't count as done: an earlier step's story flags aren't on (see Requirements below)."
-            }
+            explainIfStillNotDone(status)
         }
     }
 
@@ -89,7 +91,6 @@ struct MissionCompletionControl: View {
 
     private func markDone(choices: [Int]) {
         let changes: [Int: Bool] = completion.doneChanges(currentBits: MissionBits.decodeAll(from: pilotFile.workingBytes), choices: choices)
-        awaitingDoneCheck = !changes.isEmpty
 
         apply(changes) {
             var parts: [String] = [describe(changes, empty: "Its story flags were already on.")]
@@ -105,6 +106,19 @@ struct MissionCompletionControl: View {
 
             return parts.joined(separator: " ")
         }
+
+        // With no flag change there's no re-evaluation to wait for.
+        if changes.isEmpty {
+            explainIfStillNotDone(status)
+        } else {
+            awaitingDoneCheck = true
+        }
+    }
+
+    private func explainIfStillNotDone(_ currentStatus: MissionStatus?) {
+        guard currentStatus != .completed, let resultMessage else { return }
+
+        self.resultMessage = resultMessage + " It still doesn't count as done: an earlier step's story flags aren't on (see Requirements below)."
     }
 
     private func markNotDone() {

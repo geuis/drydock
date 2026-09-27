@@ -38,6 +38,9 @@ struct StoryChainsPane: View {
     @State private var detailHeightAtDragStart: CGFloat?
     @State private var diagnostics: MissionDiagnostics?
     @State private var diagnosedState: PilotStoryState?
+    // Goes up every time the pilot is re-evaluated, even when nothing
+    // changed, so a control can tell its edit has been checked.
+    @State private var evaluationCount: Int = 0
 
     var body: some View {
         Group {
@@ -310,6 +313,7 @@ struct StoryChainsPane: View {
             MissionCompletionControl(
                 mission: mission,
                 status: diagnostics?.diagnosis(for: mission.id)?.status,
+                evaluationCount: evaluationCount,
                 pilotFile: pilotFile,
                 storyFlags: snapshot.storyFlags
             )
@@ -538,6 +542,8 @@ struct StoryChainsPane: View {
     // MARK: - Evaluation
 
     private func recompute() {
+        defer { evaluationCount += 1 }
+
         guard let snapshot = gameData.snapshot else {
             diagnostics = nil
             return
