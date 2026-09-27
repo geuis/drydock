@@ -16,13 +16,9 @@ public struct ResourceNameIndex: Sendable {
     // Sorted once here because list views ask for these on every redraw.
     private let sortedEntriesByType: [String: [(id: Int, name: String)]]
 
-    // Type codes indexed by default. GameDataLibrary can legitimately contain
-    // more than one resource with the same type+id (split across archives,
-    // see GameDataLibrary's doc comment); when that happens here, the later
-    // one (in GameDataLibrary.resources order) wins - there's no documented
-    // canonical-precedence rule to prefer one over the other, so this just
-    // needs to be deterministic, not necessarily "correct" for every
-    // pathological case.
+    // Type codes indexed by default. GameDataLibrary already resolves
+    // duplicate type+id resources (the later archive wins), so each ID here
+    // has exactly one name.
     private static let indexedTypes: [String] = [
         systems, stellars, persons, ranks, crons, governments, junk, disasters,
         "shïp", "oütf", "wëap", "mïsn"

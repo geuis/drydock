@@ -128,8 +128,8 @@ public final class GameDataStore: ObservableObject {
                 ships: ships,
                 outfits: outfits,
                 weapons: weapons,
-                // First definition wins on duplicate IDs, matching the old
-                // per-view lookups.
+                // GameDataLibrary already keeps one resource per ID, so the
+                // merge rule below never has to choose.
                 shipsByID: Dictionary(ships.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }),
                 outfitsByID: Dictionary(outfits.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }),
                 weaponsByID: Dictionary(weapons.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }),

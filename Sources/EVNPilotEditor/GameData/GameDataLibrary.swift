@@ -5,11 +5,10 @@ import Foundation
 // Nova Ships 1-8.rez, Nova Graphics 1-3.rez, etc.) into one combined,
 // queryable set.
 //
-// Later-loaded files do NOT overwrite earlier ones: if two archives both
-// define a resource of the same type+id, both are kept as separate entries
-// (this can legitimately happen when a scenario's data is split across
-// multiple files). Callers needing a single canonical resource should
-// decide their own precedence for now.
+// When two archives define a resource of the same type+id, the one loaded
+// later replaces the earlier one, the way EV Nova lets plug-ins override
+// the base game. Resolving it once here means every catalog, name lookup,
+// and mission index agrees on which definition is in effect.
 public final class GameDataLibrary {
     public let resources: [GameResource]
 
@@ -33,14 +32,24 @@ public final class GameDataLibrary {
 
         var mergedResources: [GameResource] = []
         var failures: [(url: URL, error: Error)] = []
+        // Where each type+id sits in mergedResources, so a later duplicate
+        // replaces it in place and the order stays stable.
+        var indexByKey: [String: Int] = [:]
 
         for fileURL in rezFileURLs {
             do {
                 let archive = try RezArchive(contentsOf: fileURL)
 
-                // Duplicates across archives are expected and kept (see
-                // class doc above).
-                mergedResources.append(contentsOf: archive.resources)
+                for resource in archive.resources {
+                    let key: String = "\(resource.type)#\(resource.id)"
+
+                    if let existingIndex = indexByKey[key] {
+                        mergedResources[existingIndex] = resource
+                    } else {
+                        indexByKey[key] = mergedResources.count
+                        mergedResources.append(resource)
+                    }
+                }
             } catch {
                 failures.append((url: fileURL, error: error))
             }
