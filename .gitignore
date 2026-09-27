@@ -4,7 +4,7 @@
 Package.resolved
 
 # Built app bundle (rebuilt after every change)
-EVNPilotEditor.app/
+Drydock.app/
 
 # Editor and OS files
 .vscode/

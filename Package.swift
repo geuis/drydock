@@ -2,22 +2,22 @@
 import PackageDescription
 
 let package = Package(
-    name: "EVNPilotEditor",
+    name: "Drydock",
     platforms: [
         .macOS(.v14)
     ],
     targets: [
         .executableTarget(
-            name: "EVNPilotEditor",
-            path: "Sources/EVNPilotEditor",
+            name: "Drydock",
+            path: "Sources/Drydock",
             resources: [
                 .process("Resources")
             ]
         ),
         .testTarget(
-            name: "EVNPilotEditorTests",
-            dependencies: ["EVNPilotEditor"],
-            path: "Tests/EVNPilotEditorTests",
+            name: "DrydockTests",
+            dependencies: ["Drydock"],
+            path: "Tests/DrydockTests",
             resources: [
                 .copy("Fixtures")
             ]

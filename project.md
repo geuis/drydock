@@ -1,6 +1,6 @@
-# EV Nova Pilot Editor
+# Drydock
 
-A native macOS editor and reference browser for EV Nova. The app edits pilot
+Drydock is a native macOS pilot editor and reference browser for EV Nova. The app edits pilot
 files in place with a one-time backup per editing session and reads the game's
 `.rez` archives for ship, outfit, weapon, and mission metadata.
 
@@ -106,7 +106,7 @@ Requires macOS 14 and Swift 5.10 or newer.
 
 ```sh
 swift test
-swift run EVNPilotEditor
+swift run Drydock
 ```
 
 Known uncertain areas: last planet and the date prefix/suffix offsets are
