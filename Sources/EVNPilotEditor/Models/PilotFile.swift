@@ -44,15 +44,23 @@ public final class PilotFile: ObservableObject, Identifiable {
     }
 
     // Throws immediately (without mutating anything) if the field is not
-    // editable. Otherwise encodes into a scratch copy of workingBytes and
-    // only commits the change if encoding succeeds without throwing.
+    // editable. Otherwise applied like every edit (see applyEdit).
     public func setValue(_ value: PilotFieldValue, for field: FieldDefinition) throws {
         guard field.editable else {
             throw PilotFileError.writeFailed
         }
 
-        var scratch = workingBytes
-        try FieldCodec.encode(value, for: field, into: &scratch)
+        try applyEdit { data in
+            try FieldCodec.encode(value, for: field, into: &data)
+        }
+    }
+
+    // Every edit goes through here: it runs on a copy of the bytes and is
+    // only committed if it finishes without throwing, so a failed write
+    // never leaves workingBytes half changed.
+    private func applyEdit(_ edit: (inout Data) throws -> Void) throws {
+        var scratch: Data = workingBytes
+        try edit(&scratch)
 
         workingBytes = scratch
         isDirty = true
@@ -103,35 +111,23 @@ public final class PilotFile: ObservableObject, Identifiable {
         MissionSlot.decodeAll(from: workingBytes)
     }
 
-    // Mirrors setValue(_:for:)'s pattern: encode into a scratch copy and only
-    // commit if it succeeds, so a failed write never leaves workingBytes
-    // partially mutated.
     public func setMissionFlag(_ flag: MissionFlagKind, to value: Bool, missionIndex: Int) throws {
-        var scratch = workingBytes
-        try MissionSlot.setFlag(flag, to: value, missionIndex: missionIndex, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try MissionSlot.setFlag(flag, to: value, missionIndex: missionIndex, in: &data)
+        }
     }
 
     public func setMissionPay(_ pay: Int32, missionIndex: Int) throws {
-        var scratch = workingBytes
-        try MissionSlot.setPay(pay, missionIndex: missionIndex, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try MissionSlot.setPay(pay, missionIndex: missionIndex, in: &data)
+        }
     }
 
-    // Mirrors setMissionFlag(_:to:missionIndex:)'s pattern for the global
-    // missionBit[] story/plugin flags: encode into a scratch copy and only
-    // commit if it succeeds, so a failed write never leaves workingBytes
-    // partially mutated.
+    // One of the global missionBit[] story/plugin flags.
     public func setMissionBit(_ index: Int, to value: Bool) throws {
-        var scratch = workingBytes
-        try MissionBits.setBit(index, to: value, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try MissionBits.setBit(index, to: value, in: &data)
+        }
     }
 
     // Several flags as one edit (marking a mission done), so views update
@@ -139,304 +135,231 @@ public final class PilotFile: ObservableObject, Identifiable {
     public func setMissionBits(_ changes: [Int: Bool]) throws {
         guard !changes.isEmpty else { return }
 
-        var scratch = workingBytes
-
-        for (index, value) in changes {
-            try MissionBits.setBit(index, to: value, in: &scratch)
+        try applyEdit { data in
+            for (index, value) in changes {
+                try MissionBits.setBit(index, to: value, in: &data)
+            }
         }
-
-        workingBytes = scratch
-        isDirty = true
     }
 
     // MARK: - PilotInventory
 
     public func setItemCount(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotInventory.setItemCount(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotInventory.setItemCount(value, at: index, in: &data)
+        }
     }
 
     public func setWeapCount(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotInventory.setWeapCount(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotInventory.setWeapCount(value, at: index, in: &data)
+        }
     }
 
     public func setAmmo(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotInventory.setAmmo(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotInventory.setAmmo(value, at: index, in: &data)
+        }
     }
 
     // Every weapon, ammo, and outfit addition as one edit, so a failure
     // leaves the pilot unchanged.
     public func addStockLoadout(of ship: ShipDefinition) throws {
-        var scratch = workingBytes
-        try PilotInventory.addStockLoadout(of: ship, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotInventory.addStockLoadout(of: ship, in: &data)
+        }
     }
 
     // MARK: - PilotExploration
 
     public func setExploration(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotExploration.setExploration(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotExploration.setExploration(value, at: index, in: &data)
+        }
     }
 
     public func setLegalStatus(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotExploration.setLegalStatus(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotExploration.setLegalStatus(value, at: index, in: &data)
+        }
     }
 
     public func setStelDominated(_ value: Bool, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotExploration.setStelDominated(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotExploration.setStelDominated(value, at: index, in: &data)
+        }
     }
 
     // MARK: - PilotEscorts
 
     public func setEscortClass(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotEscorts.setEscortClass(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotEscorts.setEscortClass(value, at: index, in: &data)
+        }
     }
 
     public func setFighterClass(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotEscorts.setFighterClass(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotEscorts.setFighterClass(value, at: index, in: &data)
+        }
     }
 
     public func setEscortUpgrade(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotEscorts.setEscortUpgrade(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotEscorts.setEscortUpgrade(value, at: index, in: &data)
+        }
     }
 
     public func setEscortSale(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotEscorts.setEscortSale(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotEscorts.setEscortSale(value, at: index, in: &data)
+        }
     }
 
     public func setEscortVoiceMode(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotEscorts.setEscortVoiceMode(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotEscorts.setEscortVoiceMode(value, at: index, in: &data)
+        }
     }
 
     // MARK: - PilotUniverseState
 
     public func setStelShipCount(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setStelShipCount(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setStelShipCount(value, at: index, in: &data)
+        }
     }
 
     public func setPersonAlive(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setPersonAlive(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setPersonAlive(value, at: index, in: &data)
+        }
     }
 
     public func setPersonGrudge(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setPersonGrudge(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setPersonGrudge(value, at: index, in: &data)
+        }
     }
 
     public func setStelAnnoyance(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setStelAnnoyance(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setStelAnnoyance(value, at: index, in: &data)
+        }
     }
 
     public func setSeenIntroScreen(_ value: Bool) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setSeenIntroScreen(value, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setSeenIntroScreen(value, in: &data)
+        }
     }
 
     public func setDisasterTime(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setDisasterTime(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setDisasterTime(value, at: index, in: &data)
+        }
     }
 
     public func setDisasterStellar(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setDisasterStellar(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setDisasterStellar(value, at: index, in: &data)
+        }
     }
 
     public func setJunkQty(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setJunkQty(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setJunkQty(value, at: index, in: &data)
+        }
     }
 
     public func setPriceFlux(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setPriceFlux(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setPriceFlux(value, at: index, in: &data)
+        }
     }
 
     public func setShipColorRed(_ value: Int16) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setShipColorRed(value, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setShipColorRed(value, in: &data)
+        }
     }
 
     public func setShipColorGreen(_ value: Int16) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setShipColorGreen(value, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setShipColorGreen(value, in: &data)
+        }
     }
 
     public func setShipColorBlue(_ value: Int16) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setShipColorBlue(value, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setShipColorBlue(value, in: &data)
+        }
     }
 
     public func setRankActive(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setRankActive(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setRankActive(value, at: index, in: &data)
+        }
     }
 
     public func setStrictPlay(_ value: Bool) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setStrictPlay(value, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setStrictPlay(value, in: &data)
+        }
     }
 
     public func setIsMale(_ value: Bool) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setIsMale(value, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setIsMale(value, in: &data)
+        }
     }
 
     public func setCronDuration(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setCronDuration(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setCronDuration(value, at: index, in: &data)
+        }
     }
 
     public func setCronHoldOff(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setCronHoldOff(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setCronHoldOff(value, at: index, in: &data)
+        }
     }
 
     public func setReinforcements(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setReinforcements(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setReinforcements(value, at: index, in: &data)
+        }
     }
 
     public func setStelDestroyed(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setStelDestroyed(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setStelDestroyed(value, at: index, in: &data)
+        }
     }
 
     public func setEscortOrder(_ value: Int16, at index: Int) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setEscortOrder(value, at: index, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setEscortOrder(value, at: index, in: &data)
+        }
     }
 
     public func setDatePrefix(_ value: String) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setDatePrefix(value, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setDatePrefix(value, in: &data)
+        }
     }
 
     public func setDateSuffix(_ value: String) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setDateSuffix(value, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setDateSuffix(value, in: &data)
+        }
     }
 
     public func setNickname(_ value: String) throws {
-        var scratch = workingBytes
-        try PilotUniverseState.setPlayerNickname(value, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotUniverseState.setPlayerNickname(value, in: &data)
+        }
     }
 
     // MARK: - PilotShipIdentity
@@ -445,31 +368,25 @@ public final class PilotFile: ObservableObject, Identifiable {
     // PilotShipIdentity.setShipName(_:in:) and save()'s own comments for how
     // that resize is handled safely.
     public func setShipName(_ name: String) throws {
-        var scratch = workingBytes
-        try PilotShipIdentity.setShipName(name, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotShipIdentity.setShipName(name, in: &data)
+        }
     }
 
     // MARK: - PilotProfile
 
     public func setShipClassIndex(_ value: Int16) throws {
-        var scratch = workingBytes
-        try PilotProfile.setShipClassIndex(value, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try PilotProfile.setShipClassIndex(value, in: &data)
+        }
     }
 
     // MARK: - MissionSlot extras
 
     public func setMissionTimeLeft(_ timeLeft: Int16, missionIndex: Int) throws {
-        var scratch = workingBytes
-        try MissionSlot.setTimeLeft(timeLeft, missionIndex: missionIndex, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try MissionSlot.setTimeLeft(timeLeft, missionIndex: missionIndex, in: &data)
+        }
     }
 
     // Clears the four MissionObjectives completion flags (active/travel/
@@ -478,14 +395,12 @@ public final class PilotFile: ObservableObject, Identifiable {
     // throws (e.g. an out-of-range missionIndex), workingBytes is left
     // completely untouched rather than partially cleared.
     public func clearMissionSlot(_ missionIndex: Int) throws {
-        var scratch = workingBytes
-        try MissionSlot.setFlag(.isActive, to: false, missionIndex: missionIndex, in: &scratch)
-        try MissionSlot.setFlag(.travelObjComplete, to: false, missionIndex: missionIndex, in: &scratch)
-        try MissionSlot.setFlag(.shipObjComplete, to: false, missionIndex: missionIndex, in: &scratch)
-        try MissionSlot.setFlag(.missionFailed, to: false, missionIndex: missionIndex, in: &scratch)
-
-        workingBytes = scratch
-        isDirty = true
+        try applyEdit { data in
+            try MissionSlot.setFlag(.isActive, to: false, missionIndex: missionIndex, in: &data)
+            try MissionSlot.setFlag(.travelObjComplete, to: false, missionIndex: missionIndex, in: &data)
+            try MissionSlot.setFlag(.shipObjComplete, to: false, missionIndex: missionIndex, in: &data)
+            try MissionSlot.setFlag(.missionFailed, to: false, missionIndex: missionIndex, in: &data)
+        }
     }
 
     // True when the file on disk differs from what this editor last read or
