@@ -2,6 +2,9 @@ import SwiftUI
 
 @main
 struct EVNPilotEditorApp: App {
+    // Asks before quitting with unsaved pilot edits.
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+
     @StateObject private var settings: AppSettings
     @StateObject private var schema: FieldSchema
     @StateObject private var gameData: GameDataStore
@@ -50,6 +53,9 @@ private struct RootView: View {
     @EnvironmentObject private var gameData: GameDataStore
     @EnvironmentObject private var navigator: AppNavigator
 
+    // One per window, so closing a window only asks about its own pilot.
+    @StateObject private var unsavedChanges: UnsavedChangesTracker = UnsavedChangesTracker()
+
     var body: some View {
         Group {
             if settings.hasValidGameFolder {
@@ -58,6 +64,8 @@ private struct RootView: View {
                 GameFolderPromptView()
             }
         }
+        .environmentObject(unsavedChanges)
+        .background(WindowCloseGuard(tracker: unsavedChanges))
         .onChange(of: settings.gameFolderPath) { _, _ in
             let novaFilesURL: URL? = settings.hasValidGameFolder ? settings.novaFilesFolderURL : nil
             gameData.reload(directoryURL: novaFilesURL)

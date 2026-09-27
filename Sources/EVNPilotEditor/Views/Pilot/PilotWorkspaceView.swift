@@ -83,6 +83,7 @@ public struct PilotWorkspaceView: View {
     @EnvironmentObject private var schema: FieldSchema
     @EnvironmentObject private var gameData: GameDataStore
     @EnvironmentObject private var navigator: AppNavigator
+    @EnvironmentObject private var unsavedChanges: UnsavedChangesTracker
 
     @StateObject private var session: PilotSession = PilotSession()
 
@@ -133,6 +134,9 @@ public struct PilotWorkspaceView: View {
         }
         .onChange(of: pilotLocation, initial: true) { _, newLocation in
             navigator.pilotLocation = newLocation
+        }
+        .onChange(of: isDirty, initial: true) { _, newValue in
+            unsavedChanges.hasUnsavedChanges = newValue
         }
         .confirmationDialog(
             "Discard unsaved changes?",
