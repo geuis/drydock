@@ -122,6 +122,36 @@ final class GameDataLibraryTests: XCTestCase {
         XCTAssertEqual(library.resource(ofType: "mïsn", id: 5000)?.name, "New plug-in mission")
     }
 
+    func testHugeEntryCountIsRejectedBeforeReservingMemory() throws {
+        var archive = Self.makeArchive([(type: "mïsn", id: 200, name: "Mission", data: Data([1]))])
+        // numEntries lives at byte 20.
+        archive.replaceSubrange(20..<24, with: [0xF0, 0xFF, 0xFF, 0xFF])
+
+        let url = try makeTempDirectory().appendingPathComponent("Damaged.rez")
+        try archive.write(to: url)
+
+        XCTAssertThrowsError(try RezArchive(contentsOf: url)) { error in
+            XCTAssertEqual(error as? RezArchiveError, .truncated)
+        }
+    }
+
+    func testHugeResourceCountIsRejected() throws {
+        var archive = Self.makeArchive([(type: "mïsn", id: 200, name: "Mission", data: Data([1]))])
+        // The map is the last entry: its offset is the second entry's
+        // first field. The type list starts 8 bytes in, and each type's
+        // resource count is 8 bytes into its 12-byte record.
+        let mapOffset: Int = Int(archive[36]) | Int(archive[37]) << 8 | Int(archive[38]) << 16 | Int(archive[39]) << 24
+        let countOffset: Int = mapOffset + 8 + 8
+        archive.replaceSubrange(countOffset..<(countOffset + 4), with: [0x7F, 0xFF, 0xFF, 0xFF])
+
+        let url = try makeTempDirectory().appendingPathComponent("Damaged.rez")
+        try archive.write(to: url)
+
+        XCTAssertThrowsError(try RezArchive(contentsOf: url)) { error in
+            XCTAssertEqual(error as? RezArchiveError, .truncated)
+        }
+    }
+
     func testMissingPluginsFolderIsNotAnError() throws {
         let baseDirectory = try makeTempDirectory()
         try Self.makeArchive([

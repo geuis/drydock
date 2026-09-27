@@ -119,6 +119,8 @@ extension RezArchiveError: LocalizedError {
             return "The .rez file is empty."
         case .invalidResourceIndex(let index):
             return "The .rez file is damaged (resource index \(index))."
+        case .truncated:
+            return "The .rez file is damaged or cut short."
         }
     }
 }

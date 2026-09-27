@@ -4,12 +4,14 @@ import Foundation
 // EV Nova's scenario data files (ships, outfits, weapons, missions, ...),
 // completely unrelated to the pilot .plt save format handled elsewhere in
 // this codebase.
-public enum RezArchiveError: Error {
+public enum RezArchiveError: Error, Equatable {
     case invalidSignature
     case unsupportedGroupCount(UInt32)
     case unsupportedGroupType(UInt32)
     case noEntries
     case invalidResourceIndex(Int)
+    // A count in the file claims more records than the file can hold.
+    case truncated
 }
 
 // A single resource extracted from a .rez archive: a typed, numbered, named
@@ -75,6 +77,10 @@ public final class RezArchive {
             throw RezArchiveError.noEntries
         }
 
+        // Checked before reserving memory, so a damaged count can't ask for
+        // gigabytes.
+        try requireRoom(for: Int(numEntries), recordSize: 12, from: 24, in: data)
+
         // Entry offset table, immediately follows the group header:
         // numEntries entries of 12 bytes each (offset, size, skip).
         let entryTableStart = 24
@@ -99,6 +105,7 @@ public final class RezArchive {
         let typeListRelativeOffset = try reader.uint32(at: mapOffset, byteOrder: .big)
         let numTypes = try reader.uint32(at: mapOffset + 4, byteOrder: .big)
         let typeListOffset = mapOffset + Int(typeListRelativeOffset)
+        try requireRoom(for: Int(numTypes), recordSize: 12, from: typeListOffset, in: data)
 
         var result: [GameResource] = []
 
@@ -140,6 +147,8 @@ public final class RezArchive {
         offsets: [Int],
         sizes: [Int]
     ) throws -> [GameResource] {
+        try requireRoom(for: Int(numResources), recordSize: 266, from: listOffset, in: reader.data)
+
         var result: [GameResource] = []
         result.reserveCapacity(Int(numResources))
 
@@ -168,6 +177,14 @@ public final class RezArchive {
         }
 
         return result
+    }
+
+    // Throws unless `count` records of `recordSize` bytes starting at
+    // `start` fit inside the file.
+    private static func requireRoom(for count: Int, recordSize: Int, from start: Int, in data: Data) throws {
+        guard start >= 0, count <= (data.count - min(start, data.count)) / recordSize else {
+            throw RezArchiveError.truncated
+        }
     }
 
     // Resource type codes are a packed 4-character code, decoded via Mac OS
