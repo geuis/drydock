@@ -98,4 +98,39 @@ final class GameDataLibraryTests: XCTestCase {
         XCTAssertEqual(library.resource(ofType: "sÿst", id: 128)?.data, Data([3]))
         XCTAssertTrue(library.failedArchives.isEmpty)
     }
+
+    func testPluginsInSubfoldersLoadAfterAndOverrideTheBaseGame() throws {
+        let baseDirectory = try makeTempDirectory()
+        let pluginsDirectory = try makeTempDirectory()
+        let subfolder = pluginsDirectory.appendingPathComponent("Some Plug-in", isDirectory: true)
+        try FileManager.default.createDirectory(at: subfolder, withIntermediateDirectories: true)
+
+        // "Z" sorts after the plug-in's name, so only plug-in-last ordering
+        // lets the plug-in win.
+        try Self.makeArchive([
+            (type: "mïsn", id: 200, name: "Base mission", data: Data([1]))
+        ]).write(to: baseDirectory.appendingPathComponent("Z Data.rez"))
+
+        try Self.makeArchive([
+            (type: "mïsn", id: 200, name: "Plug-in mission", data: Data([2])),
+            (type: "mïsn", id: 5000, name: "New plug-in mission", data: Data([3]))
+        ]).write(to: subfolder.appendingPathComponent("A Plugin.rez"))
+
+        let library = try GameDataLibrary(baseDirectory: baseDirectory, pluginsDirectory: pluginsDirectory)
+
+        XCTAssertEqual(library.resource(ofType: "mïsn", id: 200)?.name, "Plug-in mission")
+        XCTAssertEqual(library.resource(ofType: "mïsn", id: 5000)?.name, "New plug-in mission")
+    }
+
+    func testMissingPluginsFolderIsNotAnError() throws {
+        let baseDirectory = try makeTempDirectory()
+        try Self.makeArchive([
+            (type: "mïsn", id: 200, name: "Base mission", data: Data([1]))
+        ]).write(to: baseDirectory.appendingPathComponent("Data.rez"))
+
+        let missing = baseDirectory.appendingPathComponent("No Such Folder", isDirectory: true)
+        let library = try GameDataLibrary(baseDirectory: baseDirectory, pluginsDirectory: missing)
+
+        XCTAssertEqual(library.resources.count, 1)
+    }
 }

@@ -98,7 +98,11 @@ public final class GameDataStore: ObservableObject {
         }
 
         do {
-            let library = try GameDataLibrary(contentsOfDirectory: directoryURL)
+            // Plug-ins live next to Nova Files in the game folder.
+            let pluginsURL: URL = directoryURL
+                .deletingLastPathComponent()
+                .appendingPathComponent(AppSettings.pluginsFolderName, isDirectory: true)
+            let library = try GameDataLibrary(baseDirectory: directoryURL, pluginsDirectory: pluginsURL)
             let ships = ShipDefinition.decodeAll(from: library)
             let outfits = OutfitDefinition.decodeAll(from: library)
                 .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }

@@ -79,9 +79,12 @@ files in place with a one-time backup per editing session and reads the game's
 - Story-flag metadata is derived from the loaded scenario's expressions
   (missions, ships, outfits, events, disasters, characters, planets, systems,
   fleets, junk), so plugin flags are supported too.
+- Plug-ins in the "Nova Plug-ins" folder (subfolders included) load after
+  Nova Files. A resource defined more than once uses the last copy loaded,
+  so plug-ins override the base game.
 - On first launch (or if the saved folder is no longer valid), prompt for the
-  EV Nova install folder. The Pilots and Nova Files folders are derived from
-  it; change it later in Settings.
+  EV Nova install folder. The Pilots, Nova Files, and Nova Plug-ins folders
+  are derived from it; change it later in Settings.
 - Browse ships, outfits, weapons, and every decoded mission definition.
 - Browse complete mission-chain components, including success, failure,
   accept, refuse, abort, and ship-objective branches; cyclic chains are safe.

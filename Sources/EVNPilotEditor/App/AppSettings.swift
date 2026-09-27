@@ -12,6 +12,7 @@ public final class AppSettings: ObservableObject {
 
     public static let pilotsFolderName: String = "Pilots"
     public static let novaFilesFolderName: String = "Nova Files"
+    public static let pluginsFolderName: String = "Nova Plug-ins"
 
     // Only a starting point for the folder picker; the app never assumes the
     // game is installed here.
@@ -35,6 +36,10 @@ public final class AppSettings: ObservableObject {
 
     public var novaFilesFolderURL: URL? {
         gameFolderURL?.appendingPathComponent(Self.novaFilesFolderName, isDirectory: true)
+    }
+
+    public var pluginsFolderURL: URL? {
+        gameFolderURL?.appendingPathComponent(Self.pluginsFolderName, isDirectory: true)
     }
 
     // True once a folder is saved and it still looks like an EV Nova install,

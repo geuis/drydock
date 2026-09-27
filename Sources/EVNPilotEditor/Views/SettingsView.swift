@@ -34,6 +34,9 @@ public struct SettingsView: View {
 
                 LabeledContent("Nova Files", value: settings.novaFilesFolderURL?.path ?? "-")
                     .textSelection(.enabled)
+
+                LabeledContent("Plug-ins", value: settings.pluginsFolderURL?.path ?? "-")
+                    .textSelection(.enabled)
             }
         }
         .padding()
