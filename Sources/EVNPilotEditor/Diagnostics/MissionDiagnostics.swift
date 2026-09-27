@@ -539,6 +539,12 @@ public struct MissionDiagnostics: Sendable {
         return items.filter { seen.insert($0).inserted }
     }
 
+    // First issue per ID wins.
+    private static func uniquedIssues(_ issues: [MissionIssue]) -> [MissionIssue] {
+        var seen: Set<String> = []
+        return issues.filter { seen.insert($0.id).inserted }
+    }
+
     private static func uniqued(_ ids: [Int]) -> [Int] {
         var seen: Set<Int> = []
         return ids.filter { seen.insert($0).inserted }
@@ -1161,6 +1167,10 @@ public struct MissionDiagnostics: Sendable {
             ))
         }
 
+        // A flag, outfit, or system named twice in one expression would
+        // otherwise produce two issues with the same ID, which list views
+        // need to be unique.
+        issues = uniquedIssues(issues)
         issues.sort { severityOrder($0.severity) < severityOrder($1.severity) }
 
         let overallSatisfied = bitsSatisfied && ratingSatisfied && shipSatisfied && mission.availRandom != 0

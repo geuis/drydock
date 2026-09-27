@@ -331,6 +331,17 @@ final class MissionDiagnosticsTests: XCTestCase {
         XCTAssertEqual(summary.counts[.active], 1)
     }
 
+    // MARK: - Issue IDs
+
+    func testFlagNamedTwiceProducesOneIssue() {
+        let m = mission(id: 1, name: "Twice", availBits: "b5 & (b5 | b6)")
+        let diagnostics = MissionDiagnostics(missions: [m], storyFlags: [:], state: makeState())
+        let ids: [String] = diagnostics.diagnosis(for: 1)?.issues.map(\.id) ?? []
+
+        XCTAssertEqual(ids.filter { $0 == "bit-5-requiresSet" }.count, 1)
+        XCTAssertEqual(Set(ids).count, ids.count)
+    }
+
     // MARK: - Location description helpers
 
     func testLocationDescriptionCoversDocumentedBuckets() {
