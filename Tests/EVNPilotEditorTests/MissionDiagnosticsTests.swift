@@ -336,7 +336,9 @@ final class MissionDiagnosticsTests: XCTestCase {
     func testLocationDescriptionCoversDocumentedBuckets() {
         XCTAssertEqual(MissionDiagnostics.locationDescription(availStel: -1), "any inhabited stellar")
         XCTAssertTrue(MissionDiagnostics.locationDescription(availStel: 500).contains("500"))
-        XCTAssertTrue(MissionDiagnostics.locationDescription(availStel: 9999).lowercased().contains("government"))
+        // 9999 is (-1 + 10000): independent worlds, not a government.
+        XCTAssertTrue(MissionDiagnostics.locationDescription(availStel: 9999).contains("independents"))
+        XCTAssertTrue(MissionDiagnostics.locationDescription(availStel: 10000).contains("government 128"))
     }
 
     func testOfferPlaceDescriptionCoversDocumentedValues() {
