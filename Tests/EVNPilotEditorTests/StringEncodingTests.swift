@@ -17,6 +17,8 @@ final class StringEncodingTests: XCTestCase {
 
         XCTAssertThrowsError(try ByteWriter.writePascalString("Pilot 🚀", at: 0, maxLength: 15, into: &data)) { error in
             XCTAssertEqual(error as? ByteWriterError, .unencodableCharacters)
+            // Alerts show this text, so it must be the readable message.
+            XCTAssertTrue(error.localizedDescription.contains("can't store"))
         }
         XCTAssertEqual(data, Data(repeating: 0, count: 16))
     }
