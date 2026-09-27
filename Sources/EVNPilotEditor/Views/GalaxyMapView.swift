@@ -16,7 +16,7 @@ struct GalaxyMapView: View {
             ContentUnavailableView(
                 "Game Data Unavailable",
                 systemImage: "externaldrive.badge.exclamationmark",
-                description: Text(gameData.errorMessage ?? "Set the Nova Files folder in Settings, then restart the app.")
+                description: Text(gameData.errorMessage ?? "Choose your EV Nova folder in Settings. The game data reloads as soon as you do.")
             )
         }
     }
