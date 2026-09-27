@@ -10,12 +10,14 @@ private struct FieldSchemaFile: Codable {
 public final class FieldSchema: ObservableObject {
     @Published public private(set) var fields: [FieldDefinition]
 
-    // The two bundled field ids that ship in Resources/FieldSchema.json.
-    // Anything else is treated as a user-discovered field for persistence purposes.
-    private static let bundledFieldIDs: Set<String> = ["shipName", "shipClassName"]
+    // The ids that ship in Resources/FieldSchema.json, read from that file
+    // so the list can't go stale. Anything else is treated as a
+    // user-discovered field for persistence purposes.
+    private let bundledFieldIDs: Set<String>
 
-    public init(fields: [FieldDefinition]) {
+    public init(fields: [FieldDefinition], bundledFieldIDs: Set<String> = []) {
         self.fields = fields
+        self.bundledFieldIDs = bundledFieldIDs
     }
 
     public static func loadDefault() -> FieldSchema {
@@ -25,13 +27,15 @@ public final class FieldSchema: ObservableObject {
             loadedFields = bundledFields
         }
 
+        let bundledIDs: Set<String> = Set(loadedFields.map(\.id))
+
         if let overrideFields = loadOverrideFields() {
             for field in overrideFields where !loadedFields.contains(where: { $0.id == field.id }) {
                 loadedFields.append(field)
             }
         }
 
-        return FieldSchema(fields: loadedFields)
+        return FieldSchema(fields: loadedFields, bundledFieldIDs: bundledIDs)
     }
 
     public func addDiscoveredField(_ field: FieldDefinition) {
@@ -41,6 +45,10 @@ public final class FieldSchema: ObservableObject {
 
         fields.append(field)
         persistDiscoveredFields()
+    }
+
+    func isBundledField(_ id: String) -> Bool {
+        bundledFieldIDs.contains(id)
     }
 
     // MARK: - Loading
@@ -84,7 +92,7 @@ public final class FieldSchema: ObservableObject {
             return
         }
 
-        let discoveredFields = fields.filter { !FieldSchema.bundledFieldIDs.contains($0.id) }
+        let discoveredFields = fields.filter { !isBundledField($0.id) }
         let file = FieldSchemaFile(fields: discoveredFields)
 
         do {
