@@ -214,6 +214,32 @@ struct TextCommitField: View {
     }
 }
 
+// Pushes and pops cursors for one view, counting what it pushed. A view can
+// disappear mid-hover or mid-drag without getting its "exit" or "end"
+// callback, which left its cursor stuck on AppKit's shared stack; calling
+// popAll() from onDisappear takes back exactly what this view added.
+final class CursorStack {
+    private var pushedCount: Int = 0
+
+    func push(_ cursor: NSCursor) {
+        cursor.push()
+        pushedCount += 1
+    }
+
+    func pop() {
+        guard pushedCount > 0 else { return }
+
+        NSCursor.pop()
+        pushedCount -= 1
+    }
+
+    func popAll() {
+        while pushedCount > 0 {
+            pop()
+        }
+    }
+}
+
 // Marks fields whose place in the pilot file is inferred from the format
 // notes and sample pilots but hasn't been confirmed by changing it and
 // checking the result in the game (the "probable" fields in project.md).

@@ -41,6 +41,7 @@ struct StoryChainsPane: View {
     // Goes up every time the pilot is re-evaluated, even when nothing
     // changed, so a control can tell its edit has been checked.
     @State private var evaluationCount: Int = 0
+    @State private var cursors: CursorStack = CursorStack()
 
     var body: some View {
         Group {
@@ -344,10 +345,13 @@ struct StoryChainsPane: View {
             .contentShape(Rectangle())
             .onHover { inside in
                 if inside {
-                    NSCursor.resizeUpDown.push()
+                    cursors.push(.resizeUpDown)
                 } else {
-                    NSCursor.pop()
+                    cursors.pop()
                 }
+            }
+            .onDisappear {
+                cursors.popAll()
             }
             .gesture(
                 DragGesture(minimumDistance: 1, coordinateSpace: .global)

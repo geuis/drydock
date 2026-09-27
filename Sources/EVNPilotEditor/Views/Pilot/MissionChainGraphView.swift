@@ -450,6 +450,7 @@ struct PanSurface<Content: View & Equatable>: View {
     // Until the player moves the chart, keep it centred on the start as the
     // window and panes settle into their sizes.
     @State private var hasMoved = false
+    @State private var cursors: CursorStack = CursorStack()
 
     var body: some View {
         GeometryReader { proxy in
@@ -465,9 +466,9 @@ struct PanSurface<Content: View & Equatable>: View {
                     isHovering = inside
 
                     if inside {
-                        NSCursor.openHand.push()
+                        cursors.push(.openHand)
                     } else {
-                        NSCursor.pop()
+                        cursors.pop()
                     }
                 }
                 .onContinuousHover(coordinateSpace: .local) { phase in
@@ -513,7 +514,10 @@ struct PanSurface<Content: View & Equatable>: View {
             keepCenterWhileZooming(from: oldZoom, to: newZoom)
         }
         .onAppear(perform: startWheelPanning)
-        .onDisappear(perform: stopWheelPanning)
+        .onDisappear {
+            stopWheelPanning()
+            cursors.popAll()
+        }
     }
 
     private var dragGesture: some Gesture {
@@ -522,7 +526,7 @@ struct PanSurface<Content: View & Equatable>: View {
                 if panAtDragStart == nil {
                     panAtDragStart = pan
                     hasMoved = true
-                    NSCursor.closedHand.push()
+                    cursors.push(.closedHand)
                 }
 
                 let start: CGSize = panAtDragStart ?? pan
@@ -530,7 +534,7 @@ struct PanSurface<Content: View & Equatable>: View {
             }
             .onEnded { _ in
                 panAtDragStart = nil
-                NSCursor.pop()
+                cursors.pop()
             }
     }
 
