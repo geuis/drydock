@@ -28,6 +28,12 @@ final class StringEncodingTests: XCTestCase {
         XCTAssertEqual(try ByteReader(data).pascalString(at: 0, maxLength: 63), "Kim\u{2019}s!")
     }
 
+    func testCStringWithUnboundedMaxLengthDoesNotOverflow() throws {
+        let data = Data([0x41, 0x42, 0x43])
+
+        XCTAssertEqual(try ByteReader(data).cString(at: 1, maxLength: Int.max), "BC")
+    }
+
     func testDateSuffixWritesMacRoman() throws {
         guard let url = Bundle.module.url(forResource: "Shane Merrol", withExtension: "plt", subdirectory: "Fixtures") else {
             throw XCTSkip("Fixture not found")

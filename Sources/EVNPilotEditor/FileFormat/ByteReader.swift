@@ -88,7 +88,9 @@ public struct ByteReader {
         }
 
         let absoluteStart = data.startIndex + offset
-        let maxEnd = min(absoluteStart + maxLength, data.endIndex)
+        // Clamped before adding, so an unbounded maxLength (Int.max) can't
+        // overflow.
+        let maxEnd = absoluteStart + min(maxLength, data.endIndex - absoluteStart)
 
         var end = absoluteStart
         while end < maxEnd, data[end] != 0x00 {
