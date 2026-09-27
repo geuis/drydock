@@ -107,6 +107,44 @@ final class PilotFileRoundTripTests: XCTestCase {
         XCTAssertEqual(decoded, .string("Testpilot"))
     }
 
+    func testSaveRefusesWhenFileChangedOnDisk() throws {
+        let tempURL = try makeTempCopyOfFixture()
+        let pilotFile = try PilotFile(url: tempURL)
+        try pilotFile.setNickname("Edited")
+
+        // Simulates the game saving the pilot while the editor has it open.
+        var gameSave = try Data(contentsOf: tempURL)
+        gameSave[gameSave.startIndex + PilotProfile.creditsOffset] ^= 0xFF
+        try gameSave.write(to: tempURL)
+
+        XCTAssertTrue(pilotFile.hasChangedOnDisk)
+        XCTAssertThrowsError(try pilotFile.save()) { error in
+            XCTAssertEqual(error as? PilotFileError, .changedOnDisk)
+        }
+        XCTAssertEqual(try Data(contentsOf: tempURL), gameSave)
+    }
+
+    func testOverwritingExternalChangesBacksUpTheDiskVersion() throws {
+        let tempURL = try makeTempCopyOfFixture()
+        let pilotFile = try PilotFile(url: tempURL)
+        try pilotFile.setNickname("Edited")
+
+        var gameSave = try Data(contentsOf: tempURL)
+        gameSave[gameSave.startIndex + PilotProfile.creditsOffset] ^= 0xFF
+        try gameSave.write(to: tempURL)
+
+        try pilotFile.save(overwritingExternalChanges: true)
+
+        let directory = tempURL.deletingLastPathComponent()
+        let backups = try FileManager.default.contentsOfDirectory(atPath: directory.path).filter { $0.contains(".bak-") }
+        XCTAssertEqual(backups.count, 1)
+
+        let backupBytes = try Data(contentsOf: directory.appendingPathComponent(backups[0]))
+        XCTAssertEqual(backupBytes, gameSave)
+        XCTAssertEqual(try Data(contentsOf: tempURL), pilotFile.workingBytes)
+        XCTAssertFalse(pilotFile.hasChangedOnDisk)
+    }
+
     func testEditingNonEditableFieldThrows() throws {
         let tempURL = try makeTempCopyOfFixture()
         let pilotFile = try PilotFile(url: tempURL)

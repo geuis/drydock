@@ -7,6 +7,9 @@ public enum PilotFileError: Error {
     case fileTooSmall
     case backupFailed
     case writeFailed
+    // The file on disk no longer matches what was opened (usually the game
+    // saved it), so a plain save would overwrite that newer progress.
+    case changedOnDisk
 }
 
 public final class PilotFile: ObservableObject, Identifiable {
@@ -475,14 +478,33 @@ public final class PilotFile: ObservableObject, Identifiable {
         isDirty = true
     }
 
-    public func save() throws {
+    // True when the file on disk differs from what this editor last read or
+    // wrote, e.g. because the game saved the pilot in the meantime. A file
+    // that can't be read counts as changed, so it is never silently replaced.
+    public var hasChangedOnDisk: Bool {
+        guard let diskBytes = try? Data(contentsOf: url) else { return true }
+
+        return diskBytes != originalBytes
+    }
+
+    // Refuses with `.changedOnDisk` when the file was changed outside the
+    // editor, unless `overwritingExternalChanges` is true. The backup is
+    // always of the bytes actually on disk, so a newer game save that gets
+    // overwritten can still be recovered from it.
+    public func save(overwritingExternalChanges: Bool = false) throws {
         let fileManager = FileManager.default
         let directory = url.deletingLastPathComponent()
+        let diskBytes: Data? = try? Data(contentsOf: url)
+        let diskChanged: Bool = diskBytes != originalBytes
 
-        if !hasBackedUpThisSession {
-            let backupURL = directory.appendingPathComponent(PilotFile.backupFileName(for: url))
+        if diskChanged, !overwritingExternalChanges {
+            throw PilotFileError.changedOnDisk
+        }
+
+        if !hasBackedUpThisSession || diskChanged {
+            let backupURL = PilotFile.unusedBackupURL(for: url, in: directory)
             do {
-                try originalBytes.write(to: backupURL, options: .atomic)
+                try (diskBytes ?? originalBytes).write(to: backupURL, options: .atomic)
             } catch {
                 throw PilotFileError.backupFailed
             }
@@ -526,5 +548,20 @@ public final class PilotFile: ObservableObject, Identifiable {
         formatter.dateFormat = "yyyyMMdd-HHmmss"
         let timestamp = formatter.string(from: Date())
         return "\(url.lastPathComponent).bak-\(timestamp)"
+    }
+
+    // Two backups in the same second would otherwise share a name, and the
+    // second would replace the first.
+    private static func unusedBackupURL(for url: URL, in directory: URL) -> URL {
+        let baseName: String = backupFileName(for: url)
+        var candidate: URL = directory.appendingPathComponent(baseName)
+        var suffix: Int = 2
+
+        while FileManager.default.fileExists(atPath: candidate.path) {
+            candidate = directory.appendingPathComponent("\(baseName)-\(suffix)")
+            suffix += 1
+        }
+
+        return candidate
     }
 }

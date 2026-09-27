@@ -95,6 +95,7 @@ public struct PilotWorkspaceView: View {
     @State private var showingDiscardForSwitch = false
     @State private var showingSaveConfirmation = false
     @State private var gameWasRunningAtSave = false
+    @State private var showingChangedOnDisk = false
     @State private var errorMessage: String?
 
     public init() {}
@@ -159,6 +160,23 @@ public struct PilotWorkspaceView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text(saveMessage)
+        }
+        .confirmationDialog(
+            "The pilot file changed on disk",
+            isPresented: $showingChangedOnDisk,
+            titleVisibility: .visible
+        ) {
+            Button("Overwrite With My Changes", role: .destructive) {
+                save(overwritingExternalChanges: true)
+            }
+
+            Button("Reload From Disk (Discard My Changes)") {
+                revert()
+            }
+
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Something else, usually EV Nova, saved this pilot after you opened it. Overwriting replaces that newer progress with your edited copy; a backup of the version on disk is made first. Reloading keeps the newer progress but drops your unsaved edits.")
         }
         .editErrorAlert($errorMessage)
     }
@@ -437,11 +455,22 @@ public struct PilotWorkspaceView: View {
         }
     }
 
-    private func save() {
+    private func save(overwritingExternalChanges: Bool = false) {
         do {
-            try session.pilotFile?.save()
+            try session.pilotFile?.save(overwritingExternalChanges: overwritingExternalChanges)
+        } catch PilotFileError.changedOnDisk {
+            showingChangedOnDisk = true
         } catch {
             errorMessage = "Could not save: \(error.localizedDescription)"
+        }
+    }
+
+    private func revert() {
+        do {
+            try session.revert()
+            focusedMissionID = nil
+        } catch {
+            errorMessage = "Could not reload the pilot: \(error.localizedDescription)"
         }
     }
 }
