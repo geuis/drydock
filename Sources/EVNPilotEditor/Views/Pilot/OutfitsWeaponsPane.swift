@@ -194,52 +194,13 @@ struct OutfitsWeaponsPane: View {
         }
     }
 
-    // Mirrors what buying the ship gives you: its default weapon slots
-    // (with ammo) and default outfit slots, added on top of what's owned.
+    // See PilotInventory.addStockLoadout for what gets added.
     private func installStockLoadout() {
         guard let ship = currentShip else { return }
 
         perform {
-            let weaponCounts: [Int16] = PilotInventory.decodeWeapCount(from: pilotFile.workingBytes)
-            let ammoCounts: [Int16] = PilotInventory.decodeAmmo(from: pilotFile.workingBytes)
-
-            for slot in ship.weapType.indices {
-                let weaponID: Int = Int(ship.weapType[slot])
-                let count: Int16 = slot < ship.weapCount.count ? ship.weapCount[slot] : 0
-                let ammoLoad: Int16 = slot < ship.ammoLoad.count ? ship.ammoLoad[slot] : 0
-                let index: Int = weaponID - 128
-
-                guard weaponCounts.indices.contains(index), count > 0 else { continue }
-
-                try pilotFile.setWeapCount(clampedSum(weaponCounts[index], count), at: index)
-
-                if ammoLoad > 0, ammoCounts.indices.contains(index) {
-                    try pilotFile.setAmmo(clampedSum(ammoCounts[index], ammoLoad), at: index)
-                }
-            }
-
-            let itemGroups: [([Int16], [Int16])] = [
-                (ship.defaultItems, ship.itemCount),
-                (ship.defaultItems2, ship.itemCount2)
-            ]
-
-            for (itemIDs, itemCounts) in itemGroups {
-                for slot in itemIDs.indices {
-                    let index: Int = Int(itemIDs[slot]) - 128
-                    let count: Int16 = slot < itemCounts.count ? itemCounts[slot] : 0
-                    let owned: [Int16] = PilotInventory.decodeItemCount(from: pilotFile.workingBytes)
-
-                    guard owned.indices.contains(index), count > 0 else { continue }
-
-                    try pilotFile.setItemCount(clampedSum(owned[index], count), at: index)
-                }
-            }
+            try pilotFile.addStockLoadout(of: ship)
         }
-    }
-
-    private func clampedSum(_ first: Int16, _ second: Int16) -> Int16 {
-        let total: Int = Int(max(first, 0)) + Int(second)
-        return Int16(min(total, Int(Int16.max)))
     }
 
     // MARK: - Lookups

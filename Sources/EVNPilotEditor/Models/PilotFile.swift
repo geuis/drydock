@@ -175,6 +175,16 @@ public final class PilotFile: ObservableObject, Identifiable {
         isDirty = true
     }
 
+    // Every weapon, ammo, and outfit addition as one edit, so a failure
+    // leaves the pilot unchanged.
+    public func addStockLoadout(of ship: ShipDefinition) throws {
+        var scratch = workingBytes
+        try PilotInventory.addStockLoadout(of: ship, in: &scratch)
+
+        workingBytes = scratch
+        isDirty = true
+    }
+
     // MARK: - PilotExploration
 
     public func setExploration(_ value: Int16, at index: Int) throws {
