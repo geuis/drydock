@@ -381,33 +381,10 @@ public struct MissionDefinition: Identifiable, Equatable, Sendable {
 
     // MARK: - Reward description
 
-    // Human-readable interpretation of payVal, covering the Bible's
-    // documented special-reward sentinel ranges (see payVal's doc comment
-    // above) as well as the plain cash case. The exact government ID packed
-    // inside each negative range's formula isn't independently confirmed
-    // (see the omissions note at the bottom of this file), so those cases
-    // describe the reward's kind rather than naming a specific government.
+    // Human-readable interpretation of payVal; MissionPay does the decoding
+    // so the catalog and Current Missions read the codes the same way.
     public var payDescription: String {
-        switch payVal {
-        case 0, -1:
-            return "No pay"
-        case 1...:
-            return "\(payVal) credits"
-        case -10383...(-10128):
-            return "Clean legal record with a government"
-        case -20383...(-20128):
-            return "Clean legal record with a government and its allies"
-        case -30383...(-30128):
-            return "Clean legal record with a government and its classmates"
-        case -40099...(-40001):
-            let percent = -payVal - 40000
-            return "Take away \(percent)% of the player's cash"
-        case ...(-50000):
-            let credits = -payVal - 50000
-            return "Take away \(credits) credits at mission start"
-        default:
-            return "Unknown special reward (\(payVal))"
-        }
+        MissionPay(payVal).description()
     }
 
     // MARK: - Mission chaining

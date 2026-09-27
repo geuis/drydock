@@ -213,28 +213,16 @@ struct CurrentMissionsPane: View {
     }
 
     // Negative pay values are special codes (clear a legal record, take
-    // cash), per the Nova Bible's PayVal table, not negative credit amounts.
+    // cash), not negative credit amounts; see MissionPay. The amount itself
+    // is already in the field, so plain credits just say "Credits".
     private func rewardDescription(_ pay: Int32) -> String {
-        let value: Int = Int(pay)
+        let decoded: MissionPay = MissionPay(pay)
 
-        switch value {
-        case 0, -1:
-            return "No pay"
-        case 1...:
+        if case .credits = decoded {
             return "Credits"
-        case -10383...(-10128):
-            return "Clears legal record with \(governmentName(-value - 10000))"
-        case -20383...(-20128):
-            return "Clears legal record with \(governmentName(-value - 20000)) and its allies"
-        case -30383...(-30128):
-            return "Clears legal record with \(governmentName(-value - 30000)) and its classmates"
-        case -40099...(-40001):
-            return "Takes \(-value - 40000)% of your cash"
-        case ...(-50000):
-            return "Takes \(-value - 50000) credits at mission start"
-        default:
-            return "Unrecognized pay code"
         }
+
+        return decoded.description(governmentName: governmentName)
     }
 
     private func governmentName(_ governmentID: Int) -> String {

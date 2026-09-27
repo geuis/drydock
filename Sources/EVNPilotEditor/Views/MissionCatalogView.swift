@@ -329,6 +329,8 @@ private struct MissionDetailView: View {
     let missions: [MissionDefinition]
     let onSelect: (Int) -> Void
 
+    @EnvironmentObject private var gameData: GameDataStore
+
     var body: some View {
         Form {
             Section("Mission") {
@@ -449,8 +451,11 @@ private struct MissionDetailView: View {
         }
     }
 
+    // With government names, where the game data has them.
     private var payDescription: String {
-        mission.payDescription
+        MissionPay(mission.payVal).description { governmentID in
+            gameData.snapshot?.names.name(type: ResourceNameIndex.governments, id: governmentID).map { GameName($0).full } ?? "government \(governmentID)"
+        }
     }
 
     private var availLocDescription: String {
