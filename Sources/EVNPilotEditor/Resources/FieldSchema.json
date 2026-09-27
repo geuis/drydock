@@ -1,0 +1,104 @@
+{
+  "fields": [
+    {
+      "id": "shipName",
+      "name": "Nickname",
+      "offset": 83698,
+      "length": 64,
+      "type": { "kind": "pascalString", "maxLength": 63 },
+      "group": "Pilot",
+      "confidence": "verified",
+      "editable": true
+    },
+    {
+      "id": "shipClassName",
+      "name": "Ship Name",
+      "offset": 86104,
+      "length": -1,
+      "type": { "kind": "cString", "maxLength": 256 },
+      "group": "Ship",
+      "confidence": "verified",
+      "editable": false
+    },
+    {
+      "id": "cash",
+      "name": "Credits",
+      "offset": 10270,
+      "length": 4,
+      "type": { "kind": "int32", "byteOrder": "little" },
+      "group": "Pilot",
+      "confidence": "verified",
+      "editable": true
+    },
+    {
+      "id": "rating",
+      "name": "Combat Rating",
+      "offset": 59730,
+      "length": 4,
+      "type": { "kind": "int32", "byteOrder": "little" },
+      "group": "Pilot",
+      "confidence": "verified",
+      "editable": true
+    },
+    {
+      "id": "lastStellar",
+      "name": "Last Planet or Station",
+      "offset": 4,
+      "length": 2,
+      "type": { "kind": "int16", "byteOrder": "little" },
+      "group": "Location & Date",
+      "confidence": "verified",
+      "editable": true
+    },
+    {
+      "id": "shipClass",
+      "name": "Ship Type",
+      "offset": 6,
+      "length": 2,
+      "type": { "kind": "int16", "byteOrder": "little" },
+      "group": "Ship",
+      "confidence": "verified",
+      "editable": true
+    },
+    {
+      "id": "fuel",
+      "name": "Fuel",
+      "offset": 22,
+      "length": 2,
+      "type": { "kind": "int16", "byteOrder": "little" },
+      "group": "Ship",
+      "confidence": "verified",
+      "editable": true
+    },
+    {
+      "id": "gameMonth",
+      "name": "Month",
+      "offset": 24,
+      "length": 2,
+      "type": { "kind": "int16", "byteOrder": "little" },
+      "group": "Location & Date",
+      "confidence": "verified",
+      "editable": true
+    },
+    {
+      "id": "gameDay",
+      "name": "Day",
+      "offset": 26,
+      "length": 2,
+      "type": { "kind": "int16", "byteOrder": "little" },
+      "group": "Location & Date",
+      "confidence": "verified",
+      "editable": true
+    },
+    {
+      "id": "gameYear",
+      "name": "Year",
+      "offset": 28,
+      "length": 2,
+      "type": { "kind": "int16", "byteOrder": "little" },
+      "group": "Location & Date",
+      "confidence": "verified",
+      "editable": true
+    }
+  ]
+}

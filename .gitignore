@@ -1,0 +1,11 @@
+# Swift Package Manager build output
+.build/
+.swiftpm/
+Package.resolved
+
+# Built app bundle (rebuilt after every change)
+EVNPilotEditor.app/
+
+# Editor and OS files
+.vscode/
+.DS_Store
