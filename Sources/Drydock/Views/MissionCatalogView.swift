@@ -41,6 +41,7 @@ public struct MissionCatalogView: View {
     private var sidebar: some View {
         listContent
             .navigationTitle("Missions")
+            .navigationSplitViewColumnWidth(min: 240, ideal: 300, max: 420)
     }
 
     @ViewBuilder

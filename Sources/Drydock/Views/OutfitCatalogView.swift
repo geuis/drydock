@@ -16,6 +16,7 @@ public struct OutfitCatalogView: View {
         NavigationSplitView {
             listContent
                 .navigationTitle("Outfits")
+                .navigationSplitViewColumnWidth(min: 240, ideal: 300, max: 420)
         } detail: {
             if let selectedOutfitID, let outfit = outfits.first(where: { $0.id == selectedOutfitID }) {
                 OutfitDetailView(outfit: outfit)

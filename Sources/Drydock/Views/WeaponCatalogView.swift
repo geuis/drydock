@@ -15,6 +15,7 @@ public struct WeaponCatalogView: View {
         NavigationSplitView {
             listContent
                 .navigationTitle("Weapons")
+                .navigationSplitViewColumnWidth(min: 240, ideal: 300, max: 420)
         } detail: {
             if let selectedWeaponID, let weapon = weapons.first(where: { $0.id == selectedWeaponID }) {
                 WeaponDetailView(weapon: weapon)
