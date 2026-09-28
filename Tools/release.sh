@@ -7,9 +7,9 @@
 # the DMG.
 #
 # Usage:
-#   ./release          Next patch version (0.1.0 -> 0.1.1)
-#   ./release minor    Next minor version (0.1.3 -> 0.2.0)
-#   ./release major    Next major version (0.2.0 -> 1.0.0)
+#   Tools/release.sh          Next patch version (0.1.0 -> 0.1.1)
+#   Tools/release.sh minor    Next minor version (0.1.3 -> 0.2.0)
+#   Tools/release.sh major    Next major version (0.2.0 -> 1.0.0)
 #
 # Set DRYDOCK_NOVA_FILES to your "Nova Files" folder so the real-data tests
 # run too. GitHub can't run them, so this is the only place they're checked
@@ -17,7 +17,7 @@
 
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 RELEASE_BRANCH="main"
 REMOTE="origin"
 
@@ -40,7 +40,7 @@ check_arguments() {
     BUMP="${1:-patch}"
 
     if [[ $# -gt 1 || ! "$BUMP" =~ ^(patch|minor|major)$ ]]; then
-        echo "Usage: ./release [patch|minor|major]   (patch is the default)" >&2
+        echo "Usage: Tools/release.sh [patch|minor|major]   (patch is the default)" >&2
         exit 1
     fi
 }

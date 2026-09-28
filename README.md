@@ -143,15 +143,15 @@ Releases are made with one command, from an up-to-date `main` with no
 uncommitted changes:
 
 ```sh
-./release
+Tools/release.sh
 ```
 
 The next version is worked out from the latest release tag. By default the
 last number goes up by one (`v0.1.0` becomes `v0.1.1`). For a bigger step:
 
 ```sh
-./release minor    # 0.1.3 becomes 0.2.0
-./release major    # 0.2.0 becomes 1.0.0
+Tools/release.sh minor    # 0.1.3 becomes 0.2.0
+Tools/release.sh major    # 0.2.0 becomes 1.0.0
 ```
 
 The script:
@@ -188,7 +188,7 @@ same version number:
 ```sh
 git push origin --delete v0.1.1
 git tag -d v0.1.1
-./release
+Tools/release.sh
 ```
 
 ### One-time setup
@@ -218,8 +218,7 @@ To base64 encode a file and copy it to the clipboard:
 | `Sources/Drydock/Diagnostics` | Mission availability, lock, and completion logic |
 | `Sources/Drydock/Views` | SwiftUI views for the pilot editor, map, and catalogs |
 | `Tests/DrydockTests` | Unit tests and fixtures |
-| `Tools` | App icon, `Info.plist` template, and the app build script |
-| `release` | The one-command release script |
+| `Tools` | App icon, `Info.plist` template, and the build and release scripts |
 | `.github/workflows` | CI (tests on every push) and the tag-triggered release |
 
 ## Known limits
