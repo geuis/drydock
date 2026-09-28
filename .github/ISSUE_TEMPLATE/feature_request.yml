@@ -1,0 +1,17 @@
+name: Feature request
+description: Suggest something Drydock could do.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: What are you trying to do?
+      description: Describe what you want to accomplish in the game or with your pilot, rather than a specific feature.
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help?
+      description: How you imagine Drydock could help with this. Rough ideas are fine.

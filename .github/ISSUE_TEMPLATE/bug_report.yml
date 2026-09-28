@@ -1,0 +1,84 @@
+name: Bug report
+description: Something in Drydock isn't working right.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. The details below make it much easier to find and fix.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the problem. Include any error message word for word.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: If you can make it happen again, list the steps.
+      placeholder: |
+        1. Open the pilot "..."
+        2. Go to Story Chains
+        3. Click on "..."
+
+  - type: input
+    id: drydock-version
+    attributes:
+      label: Drydock version
+      description: Shown in Drydock > About Drydock.
+      placeholder: "0.1.1"
+    validations:
+      required: true
+
+  - type: input
+    id: macos-version
+    attributes:
+      label: macOS version
+      description: Shown in Apple menu > About This Mac.
+      placeholder: "macOS 15.5"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mac-type
+    attributes:
+      label: Mac type
+      description: Shown in Apple menu > About This Mac, next to "Chip" or "Processor".
+      options:
+        - Apple silicon (M1 or newer)
+        - Intel
+        - Not sure
+
+  - type: textarea
+    id: plug-ins
+    attributes:
+      label: Plug-ins loaded
+      description: Plug-ins change the game data, so they matter for anything to do with missions or story. List the ones in your Nova Plug-ins folder, or write "none".
+      placeholder: none
+
+  - type: textarea
+    id: pilot-file
+    attributes:
+      label: Pilot file (optional)
+      description: |
+        If the problem involves a specific pilot, a copy of the pilot file helps a lot. Zip a **copy** of the .plt file (GitHub doesn't accept .plt files directly) and drag the zip here.
+        The file is public once attached, and it includes the pilot's name, ship, and game progress.
+
+  - type: checkboxes
+    id: backup
+    attributes:
+      label: Before you submit
+      options:
+        - label: I have a backup of the pilot file this happened with.
+          required: true

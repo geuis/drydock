@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Download the latest version
+    url: https://github.com/geuis/drydock/releases/latest
+    about: Before reporting a problem, check whether it still happens in the newest release.
