@@ -53,8 +53,21 @@ public final class FieldSchema: ObservableObject {
 
     // MARK: - Loading
 
+    // SwiftPM's Bundle.module only looks next to the .app itself, which code
+    // signing forbids, and otherwise falls back to this machine's build
+    // folder. The packaged app keeps the resource bundle in
+    // Contents/Resources, so look there first.
+    private static func resourceBundle() -> Bundle {
+        if let url = Bundle.main.url(forResource: "Drydock_Drydock", withExtension: "bundle"),
+           let bundle = Bundle(url: url) {
+            return bundle
+        }
+
+        return Bundle.module
+    }
+
     private static func loadBundledFields() -> [FieldDefinition]? {
-        guard let url = Bundle.module.url(forResource: "FieldSchema", withExtension: "json") else {
+        guard let url = resourceBundle().url(forResource: "FieldSchema", withExtension: "json") else {
             return nil
         }
 

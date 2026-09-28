@@ -3,8 +3,8 @@
 .swiftpm/
 Package.resolved
 
-# Built app bundle (rebuilt after every change)
-Drydock.app/
+# Output of Tools/build-app.sh
+dist/
 
 # Editor and OS files
 .vscode/
