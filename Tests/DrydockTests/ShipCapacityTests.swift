@@ -50,7 +50,9 @@ final class ShipCapacityTests: XCTestCase {
     // MARK: - Ship stock arrays
 
     func testModStarbridgeStockLoadoutReadsAsInt16Slots() throws {
-        let ship: ShipDefinition = try XCTUnwrap(try loadGameData().ships[Self.modStarbridgeID])
+        // Load outside XCTUnwrap, which would turn the XCTSkip into a failure.
+        let data = try loadGameData()
+        let ship: ShipDefinition = try XCTUnwrap(data.ships[Self.modStarbridgeID])
 
         XCTAssertEqual(ship.weapType, [129, 128, 135, -1])
         XCTAssertEqual(ship.weapCount, [3, 2, 2, 0])
@@ -109,7 +111,9 @@ final class ShipCapacityTests: XCTestCase {
     // MARK: - Mission offer checks
 
     func testWildGeese5bNeedsCargoSpaceFlag() throws {
-        let mission: MissionDefinition = try XCTUnwrap(try loadGameData().missions.first { $0.id == Self.wildGeese5bID })
+        // Load outside XCTUnwrap, which would turn the XCTSkip into a failure.
+        let data = try loadGameData()
+        let mission: MissionDefinition = try XCTUnwrap(data.missions.first { $0.id == Self.wildGeese5bID })
 
         XCTAssertNotEqual(mission.flags2 & MissionDefinition.flag2NeedsCargoSpace, 0)
         XCTAssertEqual(mission.cargoQty, 10)
