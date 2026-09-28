@@ -84,6 +84,14 @@ Pilot files are real save games, so Drydock is careful with them:
   game are marked in the editor, so you know to keep the backup until you've
   checked the result.
 
+## Updates
+
+When Drydock starts, it asks GitHub whether a newer release exists and, if
+so, offers to open the download page. Nothing is downloaded or installed
+automatically, and no information about you or your pilots is sent. You can
+turn the launch check off in Settings, or check any time with **Drydock >
+Check for Updates...**.
+
 ## Requirements
 
 - macOS 14 (Sonoma) or newer
@@ -101,13 +109,16 @@ On first launch Drydock asks for your EV Nova install folder. The pilots,
 game data, and plug-in folders are found from there, and you can change the
 folder later in Settings.
 
-To build a release binary:
+To build the full app bundle (a universal build for Apple silicon and Intel):
 
 ```sh
-swift build -c release
+Tools/build-app.sh
 ```
 
-The binary is written to `.build/<arch>-apple-macosx/release/Drydock`.
+The app is written to `dist/Drydock.app`. Add `--sign` to sign it with a
+Developer ID certificate from your keychain, or `--notarize` to also package,
+notarize, and staple a DMG. All the options are described at the top of the
+script.
 
 ## Tests
 
@@ -126,6 +137,76 @@ them at your own install's `Nova Files` folder:
 DRYDOCK_NOVA_FILES="/path/to/EV Nova/Nova Files" swift test
 ```
 
+## Releasing
+
+Releases are made with one command, from an up-to-date `main` with no
+uncommitted changes:
+
+```sh
+./release
+```
+
+The next version is worked out from the latest release tag. By default the
+last number goes up by one (`v0.1.0` becomes `v0.1.1`). For a bigger step:
+
+```sh
+./release minor    # 0.1.3 becomes 0.2.0
+./release major    # 0.2.0 becomes 1.0.0
+```
+
+The script:
+
+1. Checks that you're on `main`, have nothing uncommitted, and match GitHub
+   exactly (nothing unpushed or unpulled).
+2. Picks the next version.
+3. Checks that this commit hasn't already been released.
+4. Runs the tests.
+5. Shows the version, the previous release, and the commit, and asks you to
+   confirm.
+6. Creates the tag (for example `v0.1.1`) and pushes it.
+
+GitHub can't run the real-data tests, so set `DRYDOCK_NOVA_FILES` (see
+[Tests](#tests)) to have the script run them before releasing. It's easiest
+to export it in your shell profile. If it isn't set, the script warns you and
+releases anyway.
+
+Pushing the tag starts the Release workflow on GitHub. It builds the app,
+signs it with the Developer ID certificate, notarizes it with Apple, and
+publishes a GitHub release with the DMG attached and release notes generated
+from the commits. This takes about 10 minutes. The script prints links to
+follow its progress.
+
+The version number comes from the tag, so nothing in the code needs changing
+before a release.
+
+### If a release fails
+
+The tag stays on GitHub even if the workflow fails. Once the problem is fixed
+and pushed, delete the failed tag and run the script again. It will pick the
+same version number:
+
+```sh
+git push origin --delete v0.1.1
+git tag -d v0.1.1
+./release
+```
+
+### One-time setup
+
+The Release workflow needs these repository secrets (**Settings > Secrets and
+variables > Actions**):
+
+| Secret | Value |
+| --- | --- |
+| `DEVELOPER_ID_P12_BASE64` | The Developer ID Application certificate and private key, exported as `.p12` and base64 encoded |
+| `DEVELOPER_ID_P12_PASSWORD` | The password set when exporting the `.p12` |
+| `NOTARY_KEY_P8_BASE64` | An App Store Connect API key (`.p8`, Developer role), base64 encoded |
+| `NOTARY_KEY_ID` | That API key's Key ID |
+| `NOTARY_ISSUER_ID` | The Issuer ID shown on the App Store Connect API keys page |
+
+To base64 encode a file and copy it to the clipboard:
+`base64 -i <file> | pbcopy`.
+
 ## Project layout
 
 | Folder | Contents |
@@ -137,6 +218,9 @@ DRYDOCK_NOVA_FILES="/path/to/EV Nova/Nova Files" swift test
 | `Sources/Drydock/Diagnostics` | Mission availability, lock, and completion logic |
 | `Sources/Drydock/Views` | SwiftUI views for the pilot editor, map, and catalogs |
 | `Tests/DrydockTests` | Unit tests and fixtures |
+| `Tools` | App icon, `Info.plist` template, and the app build script |
+| `release` | The one-command release script |
+| `.github/workflows` | CI (tests on every push) and the tag-triggered release |
 
 ## Known limits
 

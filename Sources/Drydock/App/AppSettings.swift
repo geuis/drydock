@@ -8,7 +8,18 @@ public final class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(gameFolderPath, forKey: Self.gameFolderPathKey) }
     }
 
+    @Published public var checksForUpdatesAutomatically: Bool {
+        didSet { UserDefaults.standard.set(checksForUpdatesAutomatically, forKey: Self.checksForUpdatesKey) }
+    }
+
     private static let gameFolderPathKey: String = "gameFolderPath"
+    private static let checksForUpdatesKey: String = "checksForUpdatesAutomatically"
+
+    // Read directly at launch, before any settings object exists. Defaults to
+    // on so fixes reach people who never open Settings.
+    public static var storedChecksForUpdatesAutomatically: Bool {
+        UserDefaults.standard.object(forKey: checksForUpdatesKey) as? Bool ?? true
+    }
 
     public static let pilotsFolderName: String = "Pilots"
     public static let novaFilesFolderName: String = "Nova Files"
@@ -16,6 +27,7 @@ public final class AppSettings: ObservableObject {
 
     public init() {
         self.gameFolderPath = UserDefaults.standard.string(forKey: Self.gameFolderPathKey)
+        self.checksForUpdatesAutomatically = Self.storedChecksForUpdatesAutomatically
     }
 
     public var gameFolderURL: URL? {

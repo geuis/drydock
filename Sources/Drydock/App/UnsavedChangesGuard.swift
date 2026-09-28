@@ -39,6 +39,12 @@ enum UnsavedChangesAlert {
 // Asks before quitting throws away unsaved edits in any window.
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        guard AppSettings.storedChecksForUpdatesAutomatically else { return }
+
+        UpdateChecker.shared.checkAutomatically()
+    }
+
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard UnsavedChangesTracker.anyHaveUnsavedChanges else { return .terminateNow }
 

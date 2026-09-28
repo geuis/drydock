@@ -1,0 +1,175 @@
+#!/bin/bash
+#
+# Cuts a Drydock release with one command. Works out the next version from
+# the latest release tag, checks that the repo is ready, runs the tests, then
+# tags the current commit and pushes the tag. Pushing the tag starts the
+# Release workflow on GitHub, which builds, signs, notarizes, and publishes
+# the DMG.
+#
+# Usage:
+#   ./release          Next patch version (0.1.0 -> 0.1.1)
+#   ./release minor    Next minor version (0.1.3 -> 0.2.0)
+#   ./release major    Next major version (0.2.0 -> 1.0.0)
+#
+# Set DRYDOCK_NOVA_FILES to your "Nova Files" folder so the real-data tests
+# run too. GitHub can't run them, so this is the only place they're checked
+# before a release.
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
+RELEASE_BRANCH="main"
+REMOTE="origin"
+
+# Used when there are no release tags yet.
+FIRST_VERSION="0.1.0"
+
+fail() {
+    echo "Error: $1" >&2
+    exit 1
+}
+
+confirm() {
+    local answer
+    read -r -p "$1 [y/N] " answer
+
+    [[ "$answer" == "y" || "$answer" == "Y" ]]
+}
+
+check_arguments() {
+    BUMP="${1:-patch}"
+
+    if [[ $# -gt 1 || ! "$BUMP" =~ ^(patch|minor|major)$ ]]; then
+        echo "Usage: ./release [patch|minor|major]   (patch is the default)" >&2
+        exit 1
+    fi
+}
+
+check_branch() {
+    local current_branch
+    current_branch="$(git rev-parse --abbrev-ref HEAD)"
+
+    if [[ "$current_branch" != "$RELEASE_BRANCH" ]]; then
+        fail "Releases are made from $RELEASE_BRANCH, but you're on $current_branch."
+    fi
+}
+
+check_clean_tree() {
+    if [[ -n "$(git status --porcelain)" ]]; then
+        fail "You have uncommitted changes. Commit or stash them first, so the release matches what's on GitHub."
+    fi
+}
+
+# The tag is pushed on its own, so the commit it points at must already be on
+# GitHub or the workflow can't build it. Fetching tags also makes sure the
+# next version is worked out from every release, not just local ones.
+check_in_sync() {
+    echo "==> Fetching from $REMOTE"
+    git fetch --tags "$REMOTE"
+
+    local local_commit remote_commit
+    local_commit="$(git rev-parse HEAD)"
+    remote_commit="$(git rev-parse "$REMOTE/$RELEASE_BRANCH")"
+
+    if [[ "$local_commit" != "$remote_commit" ]]; then
+        fail "Your $RELEASE_BRANCH doesn't match $REMOTE/$RELEASE_BRANCH. Push or pull first."
+    fi
+}
+
+choose_version() {
+    local latest_tag
+    latest_tag="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1)"
+
+    if [[ -z "$latest_tag" ]]; then
+        LATEST_DESCRIPTION="none yet"
+        VERSION="$FIRST_VERSION"
+    else
+        LATEST_DESCRIPTION="$latest_tag"
+
+        local major minor patch
+        IFS=. read -r major minor patch <<< "${latest_tag#v}"
+
+        case "$BUMP" in
+            major)
+                VERSION="$((major + 1)).0.0"
+                ;;
+            minor)
+                VERSION="$major.$((minor + 1)).0"
+                ;;
+            patch)
+                VERSION="$major.$minor.$((patch + 1))"
+                ;;
+        esac
+    fi
+
+    TAG="v$VERSION"
+}
+
+# The latest release can't already point here: that would mean releasing the
+# same code twice under two version numbers.
+check_commit_not_released() {
+    local tags_here
+    tags_here="$(git tag --points-at HEAD --list 'v*')"
+
+    if [[ -n "$tags_here" ]]; then
+        fail "This commit was already released as $tags_here. Commit something new first."
+    fi
+}
+
+run_tests() {
+    if [[ -z "${DRYDOCK_NOVA_FILES:-}" ]]; then
+        echo "Warning: DRYDOCK_NOVA_FILES isn't set, so the real-data tests will be skipped."
+        REAL_DATA_NOTE="  (real-data tests were skipped)"
+    else
+        REAL_DATA_NOTE=""
+    fi
+
+    echo "==> Running tests"
+    swift test
+}
+
+tag_and_push() {
+    local commit_summary
+    commit_summary="$(git log -1 --format='%h %s')"
+
+    echo
+    echo "Ready to release Drydock $VERSION"
+    echo "  Previous release: $LATEST_DESCRIPTION"
+    echo "  Commit:           $commit_summary"
+    echo "  Tests:            passed$REAL_DATA_NOTE"
+    echo
+
+    confirm "Tag $TAG and push it to $REMOTE?" || exit 1
+
+    git tag -a "$TAG" -m "Drydock $VERSION"
+    git push "$REMOTE" "$TAG"
+}
+
+# Turns git@github.com:owner/repo.git or https://github.com/owner/repo.git
+# into https://github.com/owner/repo for the links printed at the end.
+repository_url() {
+    git remote get-url "$REMOTE" \
+        | sed -E -e 's#^git@github\.com:#https://github.com/#' -e 's#\.git$##'
+}
+
+print_next_steps() {
+    local url
+    url="$(repository_url)"
+
+    echo
+    echo "==> Tag $TAG pushed. GitHub is now building, signing, and notarizing the release."
+    echo "    Progress:  $url/actions"
+    echo "    Release:   $url/releases/tag/$TAG  (appears when the workflow finishes, about 10 minutes)"
+}
+
+cd "$REPO_ROOT"
+
+check_arguments "$@"
+check_branch
+check_clean_tree
+check_in_sync
+choose_version
+check_commit_not_released
+run_tests
+tag_and_push
+print_next_steps

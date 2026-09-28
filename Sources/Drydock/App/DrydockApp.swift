@@ -38,6 +38,13 @@ struct DrydockApp: App {
         }
         // Story Chains needs room for the chain list plus mission details.
         .defaultSize(width: 1200, height: 800)
+        .commands {
+            CommandGroup(after: .appInfo) {
+                Button("Check for Updates...") {
+                    UpdateChecker.shared.checkFromMenu()
+                }
+            }
+        }
 
         Settings {
             SettingsView()

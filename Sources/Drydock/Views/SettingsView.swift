@@ -38,9 +38,19 @@ public struct SettingsView: View {
                 LabeledContent("Plug-ins", value: settings.pluginsFolderURL?.path ?? "-")
                     .textSelection(.enabled)
             }
+
+            Section("Updates") {
+                LabeledContent("Version", value: UpdateChecker.currentVersion?.description ?? "Development build")
+
+                Toggle("Check for updates when Drydock starts", isOn: $settings.checksForUpdatesAutomatically)
+
+                Button("Check Now") {
+                    UpdateChecker.shared.checkFromMenu()
+                }
+            }
         }
         .padding()
-        .frame(minWidth: 480, minHeight: 280)
+        .frame(minWidth: 480, minHeight: 380)
     }
 
     private func chooseGameFolder() {
