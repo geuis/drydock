@@ -9,20 +9,6 @@ import XCTest
 // correctly. Skips gracefully via XCTSkip if the game files aren't present,
 // matching RezArchiveTests/ShipDefinitionTests/OutfitDefinitionTests.
 final class MissionDefinitionTests: XCTestCase {
-    private func novaFilesDirectory() throws -> URL {
-        let directory = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Desktop", isDirectory: true)
-            .appendingPathComponent("EV Nova", isDirectory: true)
-            .appendingPathComponent("Nova Files", isDirectory: true)
-
-        var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: directory.path, isDirectory: &isDirectory), isDirectory.boolValue else {
-            throw XCTSkip("EV Nova game files not found at \(directory.path) - skipping real-file verification.")
-        }
-
-        return directory
-    }
-
     private func loadMissions() throws -> [MissionDefinition] {
         let directory = try novaFilesDirectory()
         let library = try GameDataLibrary(contentsOfDirectory: directory)

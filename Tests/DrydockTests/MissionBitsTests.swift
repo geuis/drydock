@@ -133,12 +133,7 @@ final class MissionBitsTests: XCTestCase {
     }
 
     func testStoryFlagCatalogUsesInstalledScenarioWhenAvailable() throws {
-        let directory = URL(fileURLWithPath: AppSettings.suggestedGameFolder)
-            .appendingPathComponent(AppSettings.novaFilesFolderName, isDirectory: true)
-        var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: directory.path, isDirectory: &isDirectory), isDirectory.boolValue else {
-            throw XCTSkip("EV Nova game files are not installed at the default location.")
-        }
+        let directory = try novaFilesDirectory()
 
         let catalog = StoryFlagCatalog(library: try GameDataLibrary(contentsOfDirectory: directory))
         XCTAssertGreaterThan(catalog.flagsByID.count, 100)

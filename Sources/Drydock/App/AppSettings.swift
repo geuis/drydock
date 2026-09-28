@@ -14,12 +14,6 @@ public final class AppSettings: ObservableObject {
     public static let novaFilesFolderName: String = "Nova Files"
     public static let pluginsFolderName: String = "Nova Plug-ins"
 
-    // Only a starting point for the folder picker; the app never assumes the
-    // game is installed here.
-    public static var suggestedGameFolder: String {
-        NSString(string: "~/Desktop/EV Nova").expandingTildeInPath
-    }
-
     public init() {
         self.gameFolderPath = UserDefaults.standard.string(forKey: Self.gameFolderPathKey)
     }

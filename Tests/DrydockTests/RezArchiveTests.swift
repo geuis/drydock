@@ -2,26 +2,12 @@ import XCTest
 @testable import Drydock
 
 // These tests parse the real EV Nova game data files installed on this
-// machine (outside the repo, at ~/Desktop/EV Nova/Nova Files/). They are the
+// machine (outside the repo; see NovaFilesDirectory.swift). They are the
 // only real-world check we have for RezArchive's BRGR parsing, since no
 // synthetic fixture can substitute for the actual file layout. If that game
 // install isn't present (a different machine, CI, etc.) every test here
 // skips gracefully via XCTSkip rather than failing.
 final class RezArchiveTests: XCTestCase {
-    private func novaFilesDirectory() throws -> URL {
-        let directory = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Desktop", isDirectory: true)
-            .appendingPathComponent("EV Nova", isDirectory: true)
-            .appendingPathComponent("Nova Files", isDirectory: true)
-
-        var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: directory.path, isDirectory: &isDirectory), isDirectory.boolValue else {
-            throw XCTSkip("EV Nova game files not found at \(directory.path) - skipping real-file verification.")
-        }
-
-        return directory
-    }
-
     private func novaDataFileURLs() throws -> [URL] {
         let directory = try novaFilesDirectory()
         let urls = (1...6).map { directory.appendingPathComponent("Nova Data \($0).rez") }

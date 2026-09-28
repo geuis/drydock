@@ -6,20 +6,6 @@ import XCTest
 // notes) produces plausible, internally-consistent values. Skips gracefully
 // via XCTSkip if the game install isn't present, matching RezArchiveTests.
 final class ShipDefinitionTests: XCTestCase {
-    private func novaFilesDirectory() throws -> URL {
-        let directory = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Desktop", isDirectory: true)
-            .appendingPathComponent("EV Nova", isDirectory: true)
-            .appendingPathComponent("Nova Files", isDirectory: true)
-
-        var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: directory.path, isDirectory: &isDirectory), isDirectory.boolValue else {
-            throw XCTSkip("EV Nova game files not found at \(directory.path) - skipping real-file verification.")
-        }
-
-        return directory
-    }
-
     // Debug helper (not itself an assertion) - dumps every decoded ship's
     // key stats so offset hypotheses can be eyeballed against real data.
     // Left in as a diagnostic aid; run with -v to see the output.

@@ -392,9 +392,10 @@ public struct PilotWorkspaceView: View {
         return message
     }
 
-    // Reading the folder happens off the main thread: the default folder is
-    // on the Desktop, and macOS can hold the read while it asks for
-    // permission, which would otherwise freeze the whole window.
+    // Reading the folder happens off the main thread: the game folder is
+    // often in a protected location such as Desktop or Documents, and macOS
+    // can hold the read while it asks for permission, which would otherwise
+    // freeze the whole window.
     private func refreshPilotList() {
         guard let folderURL: URL = settings.pilotsFolderURL else {
             pilotURLs = []

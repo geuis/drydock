@@ -85,12 +85,7 @@ final class MissionTextTests: XCTestCase {
     }
 
     private func realMissions() throws -> (missions: [MissionDefinition], descriptions: [Int: String]) {
-        let directory = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Desktop/EV Nova/Nova Files", isDirectory: true)
-
-        guard FileManager.default.fileExists(atPath: directory.path) else {
-            throw XCTSkip("EV Nova game files not found - skipping real-data check.")
-        }
+        let directory = try novaFilesDirectory()
 
         let library = try GameDataLibrary(contentsOfDirectory: directory)
         return (MissionDefinition.decodeAll(from: library), DescriptionText.decodeAll(from: library))

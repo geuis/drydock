@@ -17,12 +17,7 @@ final class ShipCapacityTests: XCTestCase {
     }
 
     private func loadGameData() throws -> GameData {
-        let directory = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Desktop/EV Nova/Nova Files", isDirectory: true)
-
-        guard FileManager.default.fileExists(atPath: directory.path) else {
-            throw XCTSkip("EV Nova game files not found - skipping real-data check.")
-        }
+        let directory = try novaFilesDirectory()
 
         let library = try GameDataLibrary(contentsOfDirectory: directory)
         let ships = Dictionary(ShipDefinition.decodeAll(from: library).map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })

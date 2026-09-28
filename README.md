@@ -118,6 +118,14 @@ swift test
 The tests run against the real parsing and editing code, using a sample
 pilot file in `Tests/DrydockTests/Fixtures`.
 
+Some tests also check the decoders against real EV Nova game data. That data
+can't be included in the repo, so those tests are skipped unless you point
+them at your own install's `Nova Files` folder:
+
+```sh
+DRYDOCK_NOVA_FILES="/path/to/EV Nova/Nova Files" swift test
+```
+
 ## Project layout
 
 | Folder | Contents |

@@ -333,12 +333,7 @@ final class StoryLockTests: XCTestCase {
     // MARK: - Real data
 
     func testRealPolarisStorylineIsOneChainAndNothingIsGiant() throws {
-        let directory = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Desktop/EV Nova/Nova Files", isDirectory: true)
-
-        guard FileManager.default.fileExists(atPath: directory.path) else {
-            throw XCTSkip("EV Nova game files not found - skipping real-data check.")
-        }
+        let directory = try novaFilesDirectory()
 
         let missions = MissionDefinition.decodeAll(from: try GameDataLibrary(contentsOfDirectory: directory))
         let chains = MissionChainResolver(missions: missions).allChains()

@@ -360,19 +360,6 @@ final class MissionDiagnosticsTests: XCTestCase {
 
     // MARK: - Real data
 
-    private func novaFilesDirectory() throws -> URL {
-        let directory = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Desktop", isDirectory: true)
-            .appendingPathComponent("EV Nova", isDirectory: true)
-            .appendingPathComponent("Nova Files", isDirectory: true)
-
-        var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: directory.path, isDirectory: &isDirectory), isDirectory.boolValue else {
-            throw XCTSkip("EV Nova game files not found at \(directory.path) - skipping real-file verification.")
-        }
-        return directory
-    }
-
     private func fixtureURL() throws -> URL {
         guard let url = Bundle.module.url(forResource: "Chuck Yeager", withExtension: "plt", subdirectory: "Fixtures") else {
             XCTFail("Could not locate bundled fixture Chuck Yeager.plt")

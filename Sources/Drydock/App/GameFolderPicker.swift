@@ -12,7 +12,12 @@ public enum GameFolderPicker {
         panel.canChooseFiles = false
         panel.canCreateDirectories = false
         panel.allowsMultipleSelection = false
-        panel.directoryURL = URL(fileURLWithPath: startPath ?? AppSettings.suggestedGameFolder, isDirectory: true)
+
+        // With no saved folder, let macOS open wherever the user last browsed
+        // rather than guessing where the game is installed.
+        if let startPath {
+            panel.directoryURL = URL(fileURLWithPath: startPath, isDirectory: true)
+        }
 
         guard panel.runModal() == .OK else { return nil }
 
