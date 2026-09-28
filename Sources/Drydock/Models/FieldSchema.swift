@@ -113,10 +113,8 @@ public final class FieldSchema: ObservableObject {
             return nil
         }
 
-        // Keeps the folder name from before the app was renamed Drydock, so
-        // fields discovered by earlier versions are still found.
         return appSupport
-            .appendingPathComponent("EVNPilotEditor")
+            .appendingPathComponent("Drydock")
             .appendingPathComponent("DiscoveredFields.json")
     }
 }
