@@ -125,7 +125,10 @@ run_tests() {
     fi
 
     echo "==> Running tests"
-    swift test
+
+    # All tests use XCTest; this skips Swift Testing's confusing
+    # "0 tests passed" line.
+    swift test --disable-swift-testing
 }
 
 tag_and_push() {

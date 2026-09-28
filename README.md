@@ -16,6 +16,20 @@ It also explains where you are in the game's storylines: which missions you
 have done, which ones you can take next, and why a mission you expected
 never showed up.
 
+## Download
+
+1. Download the latest **Drydock DMG** from the
+   [Releases page](https://github.com/geuis/drydock/releases/latest).
+2. Open it and drag **Drydock** into **Applications**.
+3. Open Drydock and choose your EV Nova folder (the one containing
+   `Nova Files`).
+
+Drydock is signed and notarized by Apple, so it opens without security
+warnings. If your EV Nova folder is on the Desktop or in Documents, macOS
+may ask for permission to read it.
+
+Requires macOS 14 (Sonoma) or newer and your own copy of EV Nova.
+
 ## Features
 
 ### Pilot editing
@@ -94,10 +108,14 @@ Check for Updates...**.
 
 ## Requirements
 
+To use Drydock:
+
 - macOS 14 (Sonoma) or newer
-- Swift 5.10 or newer (Xcode 15.3+ or the Swift toolchain)
 - An EV Nova install folder containing `Nova Files`, and optionally `Pilots`
   and `Nova Plug-ins`
+
+To build it from source, you also need Swift 5.10 or newer (Xcode 15.3+ or
+the Swift toolchain).
 
 ## Building and running
 

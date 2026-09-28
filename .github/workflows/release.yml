@@ -18,9 +18,13 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v5
+        with:
+          # Full history and tags, so the release notes can list every
+          # commit since the previous release.
+          fetch-depth: 0
 
       - name: Run tests
-        run: swift test
+        run: swift test --disable-swift-testing
 
       - name: Import signing certificate
         env:
@@ -68,9 +72,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
+          NOTES_PATH="$RUNNER_TEMP/release-notes.md"
+
+          Tools/release-notes.sh "$GITHUB_REF_NAME" > "$NOTES_PATH"
+
           gh release create "$GITHUB_REF_NAME" "dist/Drydock-$VERSION.dmg" \
             --title "Drydock $VERSION" \
-            --generate-notes
+            --notes-file "$NOTES_PATH"
 
       - name: Clean up signing material
         if: always()
